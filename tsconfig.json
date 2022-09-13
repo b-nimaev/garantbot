@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "sourceMap": true,
+        "outDir": "dist",
+        "strict": false,
+        "strictNullChecks": true,
+        "noImplicitAny": false,
+    },
+    "exclude": [
+        "node_modules"
+    ],
+}

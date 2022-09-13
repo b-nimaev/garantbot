@@ -1,0 +1,40 @@
+{
+  "name": "garantbot",
+  "version": "1.0.0",
+  "description": "telegram bot on node.js",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "ts-node-dev ./src/index.ts",
+    "build": "tsc --build tsconfig.json && node ./dist/src/index.js"
+  },
+  "keywords": [
+    "telegram-bot-api",
+    "node.js",
+    "telegraf.js",
+    "monogodb",
+    "express",
+    "typescriptt"
+  ],
+  "author": "anastasian",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.20.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.2",
+    "email-validator": "^2.0.4",
+    "express": "^4.18.1",
+    "mongodb": "^4.9.1",
+    "mongoose": "^6.6.0",
+    "morgan": "^1.10.0",
+    "telegraf": "^4.9.1"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.13",
+    "@types/localtunnel": "^2.0.1",
+    "@types/node": "^18.7.16",
+    "localtunnel": "^2.0.2",
+    "nodemon": "^2.0.19",
+    "ts-node": "^10.9.1"
+  }
+}
