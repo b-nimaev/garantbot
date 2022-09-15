@@ -1,9 +1,12 @@
 /* eslint-disable @typescript-eslint/no-floating-promises */
-import { Scenes, session, Telegraf } from 'telegraf'
+import { Markup, Scenes, session, Telegraf } from 'telegraf'
+import { UserService } from './Controller/db';
 import { MyContext } from './Model/Model'
 
 // Scenes
 import home from './View/Home/HomeScene';
+import deal from './View/Deal/DealScene';
+import seller from './View/Seller/SellerScene';
 
 // SSL
 const fs = require('fs');
@@ -15,10 +18,6 @@ const morgan = require("morgan")
 const cors = require("cors")
 const BodyParser = require("body-parser")
 
-const UserService = require('./Controller/db');
-    (async () => {
-        console.log(await UserService.getAllUsers())
-    })();
 // Server
 require("dotenv").config()
 const express = require("express")
@@ -32,7 +31,7 @@ if (token === undefined) {
 
 // Init scenes & set secretPath for requires from bot
 
-const scenes = [home]
+const scenes = [home, deal, seller]
 const bot = new Telegraf<MyContext>(token)
 export default bot
 const app = express()
@@ -62,7 +61,6 @@ if (process.env.mode === "development") {
         .then((status) => console.log('Webhook setted: ' + status))
     console.log(secretPath)
 }
-
 
 bot.use(session())
 bot.use((ctx, next) => {

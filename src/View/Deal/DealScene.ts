@@ -2,7 +2,7 @@ import { Composer, Scenes } from "telegraf";
 import { UserService } from "../../Controller/db";
 // import * as EmailValidator from 'email-validator';
 import { MyContext } from "../../Model/Model";
-import { greeting } from "./HomeGreeting";
+import { greeting } from "./DealGreeting";
 require("dotenv").config();
 
 async function setRole(ctx: MyContext) {
@@ -12,23 +12,23 @@ async function setRole(ctx: MyContext) {
 
     if (query) {
         if (data == 'seller' || data == 'buyer') {
+            ctx.answerCbQuery('Role setted')
             UserService.SetRole(ctx)
-
-            if (data == 'seller') {
-                ctx.scene.enter('deal')
-            }
-
         }
+
     }
 }
 
 const handler = new Composer<MyContext>(); // function
-const home = new Scenes.WizardScene(
-    "home",
+const deal = new Scenes.WizardScene(
+    "deal",
     handler,
-    async (ctx) => setRole(ctx),
 )
 
-home.leave(async (ctx) => console.log("home leave"))
-home.start(async (ctx) => await greeting(ctx))
-export default home
+handler.action('openDeal', async (ctx) => {
+    ctx.reply('Открытие сделки ')
+})
+
+deal.leave(async (ctx) => console.log("deal scene leave"))
+deal.enter(async (ctx) => await greeting(ctx))
+export default deal

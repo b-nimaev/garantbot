@@ -1,50 +1,55 @@
-import { getUser, registerUser, removeBalance, getInterface } from "../../Controller/UserController"
+import { Model, Schema } from "mongoose"
+import { ExtraReplyMessage } from "telegraf/typings/telegram-types"
+import { IUser, UserService } from "../../Controller/db"
 import { MyContext } from "../../Model/Model"
 // import { messageRenderFunction } from "./HomeScene"
 
 export async function greeting(ctx: MyContext) {
 
-    if (ctx.update["message"]) {
-
-        let user = ctx.update["message"].from
+    if (ctx.from) {
+        let user: IUser | null | undefined = await UserService.GetUserById(ctx)
 
         if (user) {
 
-            let userData = await getUser(user)
+            let message: string 
 
-            if (!userData) {
-                await registerUser(user)
-            } else {
-                await removeBalance(user)
+            // Если пользователь существует в базе данных
+            if (user.role == 'buyer') {
+                await ctx.scene.enter("deal")
             }
 
+            if (user.role == 'seller') {
+                ctx.scene.enter('seller')
+            }
+
+        } else {
+
+            const extra = {
+                parse_mode: 'HTML',
+                reply_markup: {
+                    inline_keyboard: [
+                        [
+                            {
+                                text: 'Продавец',
+                                callback_data: 'seller'
+                            },
+                            {
+                                text: 'Покупатель',
+                                callback_data: 'buyer'
+                            }
+                        ]
+                    ]
+                }
+            }
+
+            // Если пользователя нет в базе данных
+            await UserService.SaveUser(ctx)
+
+            const message = `Привет, ${ctx.from?.first_name}, выбери свою роль 🗡`
+            // @ts-ignore
+            ctx.update["message"] ? await ctx.reply(message, extra) : await ctx.reply(message, extra)
         }
     }
 
-    let extra = {
-        parse_mode: 'HTML',
-        reply_markup: {
-            inline_keyboard: [
-                [
-                    {
-                        text: 'Продавец',
-                        callback_data: 'seller'
-                    },
-                    {
-                        text: 'Покупатель',
-                        callback_data: 'buyer'
-                    }
-                ]
-            ]
-        }
-    }
-
-    // return await messageRenderFunction(ctx)
-
-    const message = `Привет, ${ctx.from?.first_name}, выбери свою роль 🗡`
-    await ctx.replyWithSticker("CAACAgUAAxkBAAIJ8GMdpBkf7apOsOKO5HMFXltRA6-7AAJoBgACkuQYVtOM4kdKF-ejKQQ")
-
-    // @ts-ignore
-    ctx.update["message"] ? await ctx.reply(message, extra) : await ctx.reply(message, extra)
     ctx.wizard.next()
 }
