@@ -5,8 +5,10 @@ import { MyContext } from './Model/Model'
 
 // Scenes
 import home from './View/Home/HomeScene';
-import deal from './View/Deal/DealScene';
 import seller from './View/Seller/SellerScene';
+import customer from './View/Customer/CustomerScene';
+import search from './View/Search/SearchScene';
+import chagneSearchParams from './View/ChangeSearchParams/ChangeSearchParamsScene';
 
 // SSL
 const fs = require('fs');
@@ -17,6 +19,51 @@ const https = require('https');
 const morgan = require("morgan")
 const cors = require("cors")
 const BodyParser = require("body-parser")
+export const currency = [{
+    text: 'BTC',
+    callback_data: 'btc'
+}, {
+    text: 'USDT',
+    callback_data: 'usdt'
+}]
+
+export const banks = [{
+    text: 'СберБанк',
+    callback_data: 'sber'
+}, {
+    text: 'АльфаБанк',
+    callback_data: 'alfa'
+}, {
+    text: 'Тиньков',
+    callback_data: 'tinkoff'
+}, {
+    text: 'Открытие',
+    callback_data: 'openbank'
+}, {
+    text: 'МТС',
+    callback_data: 'mts'
+}, {
+    text: 'ВТБ',
+    callback_data: 'vtb'
+}, {
+    text: 'ГазпромБанк',
+    callback_data: 'gazprom'
+}, {
+    text: 'QIWI',
+    callback_data: 'qiwi'
+}, {
+    text: 'ЕКБ',
+    callback_data: 'ekb'
+}, {
+    text: 'ПСБ',
+    callback_data: 'psb'
+}, {
+    text: 'РоссельхозБанк',
+    callback_data: 'rosselhoz'
+}, {
+    text: 'Казахстан',
+    callback_data: 'kz'
+}]
 
 // Server
 require("dotenv").config()
@@ -31,7 +78,7 @@ if (token === undefined) {
 
 // Init scenes & set secretPath for requires from bot
 
-const scenes = [home, deal, seller]
+const scenes = [home, seller, customer, search, chagneSearchParams]
 const bot = new Telegraf<MyContext>(token)
 export default bot
 const app = express()

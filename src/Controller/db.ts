@@ -17,7 +17,11 @@ export interface IUser extends User {
     role: string;
     date: {
         registered: number
-    }
+    },
+    settings: {
+        banks: { text: string, callback_data: string }[] | null,
+        currency: { text: string, callback_data: string }[] | null
+    },
 }
 
 // 2. Create a Schema corresponding to the document interface.
@@ -32,8 +36,13 @@ const userSchema = new Schema<IUser>({
     lastModified: { type: Number, required: true },
     date: {
         registered: Number
-    }
+    },
+    settings: {
+        banks: [Object] || null,
+        currency: [Object] || null
+    },
 }, { timestamps: true });
+
 
 // 3. Create a Model.
 const UserModel = model<IUser>('User', userSchema);
@@ -69,6 +78,10 @@ export class UserService {
                 role: "",
                 date: {
                     registered: Date.now()
+                },
+                settings: {
+                    banks: [],
+                    currency: []
                 }
             }
 
@@ -95,6 +108,32 @@ export class UserService {
             const res = await UserModel.updateOne({
                 id: ctx.from?.id
             }, { $set: { role: ctx.update["callback_query"].data } })
+            return res
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    static async SetBank(ctx: MyContext, element) {
+        try {
+            const res = await UserModel.updateOne({
+                id: ctx.from?.id
+            }, {
+                $addToSet: { "settings.banks": element }
+            })
+            return res
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    static async SetCurrency(ctx: MyContext, element) {
+        try {
+            const res = await UserModel.updateOne({
+                id: ctx.from?.id
+            }, {
+                $addToSet: { "settings.currency": element }
+            })
             return res
         } catch (error) {
             console.log(error)

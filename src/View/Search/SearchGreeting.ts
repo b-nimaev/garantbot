@@ -1,5 +1,5 @@
 import { Model, Schema } from "mongoose"
-import { ExtraReplyMessage } from "telegraf/typings/telegram-types"
+import { ExtraEditMessageText, ExtraReplyMessage } from "telegraf/typings/telegram-types"
 import { IUser, UserService } from "../../Controller/db"
 import { MyContext } from "../../Model/Model"
 
@@ -9,9 +9,13 @@ export async function greeting(ctx: MyContext) {
         let user: IUser | null | undefined = await UserService.GetUserById(ctx)
         console.log(user)
         if (user) {
-            let message = `Ваш ID: <code>${user.id}</code> \nРоль: <code>Продавец</code> \nВаш e-mail: <code>${user.email}</code> \nДата регистрации: ${user.date.registered} \n\nЧтобы начать работу, нажмите на кнопку ниже <b>Открыть сделку</b>`
+            let message = `Ваш ID: <code>${user.id}</code> \nРоль: <code>${user.role}</code> \nВаш e-mail: <code>${user.email}</code>\n`;
 
-            const buyerExtraKeyboard: ExtraReplyMessage = {
+            message += `Дата регистрации: ${user.date.registered} \n\n`;
+            message += `Чтобы остановить поиск можно нажать на кнопку ниже <b>Остановить поиск</b>, \n\n<b>или</b> отправить команду /stop_search \n\n`
+            message += `... Идёт поиск 🔎`;
+
+            const buyerExtraKeyboard: ExtraEditMessageText = {
                 parse_mode: 'HTML',
                 reply_markup: {
                     inline_keyboard: [
@@ -25,7 +29,7 @@ export async function greeting(ctx: MyContext) {
                 }
             }
 
-            await ctx.reply(message, buyerExtraKeyboard)
+            await ctx.editMessageText(message, buyerExtraKeyboard)
         }
 
     }

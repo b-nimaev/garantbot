@@ -9,15 +9,18 @@ async function setRole(ctx: MyContext) {
 
     let query = ctx.update['callback_query']
     let data = query.data
-
+    
     if (query) {
         if (data == 'seller' || data == 'buyer') {
             UserService.SetRole(ctx)
 
             if (data == 'seller') {
-                ctx.scene.enter('deal')
+                ctx.scene.enter('seller')
             }
 
+            if (data == 'buyer') {
+                ctx.scene.enter('customer')
+            }
         }
     }
 }
@@ -31,4 +34,5 @@ const home = new Scenes.WizardScene(
 
 home.leave(async (ctx) => console.log("home leave"))
 home.start(async (ctx) => await greeting(ctx))
+home.enter(async (ctx) => await greeting(ctx))
 export default home
