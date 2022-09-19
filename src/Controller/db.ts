@@ -5,6 +5,11 @@ import { MyContext } from '../Model/Model';
 require("dotenv").config();
 let uri = <string>process.env.dbcon;
 
+export interface IData {
+    name: string,
+    data: object[]
+}
+
 // 1. Create an interface representing a document in MongoDB.
 export interface IUser extends User {
     name: string | undefined;
@@ -43,9 +48,14 @@ const userSchema = new Schema<IUser>({
     },
 }, { timestamps: true });
 
+const dataSchema = new Schema<IData>({
+    name: String,
+    data: [Object]
+})
 
 // 3. Create a Model.
 const UserModel = model<IUser>('User', userSchema);
+const DataModel = model<IData>('Data', dataSchema);
 run().catch(err => console.log(err));
 
 export async function run() {
@@ -127,6 +137,45 @@ export class UserService {
         }
     }
 
+    static async InsertBanks(arr) {
+        try {
+            arr.forEach(async (element: {}) => {
+                const res = await DataModel.updateOne({
+                    name: "banks"
+                }, {
+                    $addToSet: { "data": element }
+                })
+            });
+            // return res
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
+    static async SpliceBank(ctx: MyContext, element: { text: string; callback_data: string }) {
+        try {
+
+            let user = await this.GetUserById(ctx)
+            if (user) {
+                if (user.settings.banks) {
+                    user.settings.banks.forEach(async (search_element, index) => {
+                        if (search_element == element) {
+                            return await UserModel.updateOne({
+                                id: ctx.from?.id
+                            }, {
+                                $pull: {
+                                    "settings.banks": null
+                                }
+                            })
+                        }
+                    })
+                }
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
     static async SetCurrency(ctx: MyContext, element) {
         try {
             const res = await UserModel.updateOne({
@@ -137,6 +186,32 @@ export class UserService {
             return res
         } catch (error) {
             console.log(error)
+        }
+    }
+
+    static async ResetSettings(ctx) {
+        try {
+            const res = await UserModel.updateOne({
+                id: ctx.from?.id
+            }, {
+                $unset: { "settings.banks": "" }
+            })
+            return res
+        } catch (err) {
+            console.log(err)
+        }
+    }
+
+    static async GetBanks() {
+        try {
+            let res = await DataModel.find({
+                "name": "banks"
+            })
+
+            return res
+        } catch (err) {
+            console.log(err)
+            return []
         }
     }
 }   

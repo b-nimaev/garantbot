@@ -27,44 +27,6 @@ export const currency = [{
     callback_data: 'usdt'
 }]
 
-export const banks = [{
-    text: 'СберБанк',
-    callback_data: 'sber'
-}, {
-    text: 'АльфаБанк',
-    callback_data: 'alfa'
-}, {
-    text: 'Тиньков',
-    callback_data: 'tinkoff'
-}, {
-    text: 'Открытие',
-    callback_data: 'openbank'
-}, {
-    text: 'МТС',
-    callback_data: 'mts'
-}, {
-    text: 'ВТБ',
-    callback_data: 'vtb'
-}, {
-    text: 'ГазпромБанк',
-    callback_data: 'gazprom'
-}, {
-    text: 'QIWI',
-    callback_data: 'qiwi'
-}, {
-    text: 'ЕКБ',
-    callback_data: 'ekb'
-}, {
-    text: 'ПСБ',
-    callback_data: 'psb'
-}, {
-    text: 'РоссельхозБанк',
-    callback_data: 'rosselhoz'
-}, {
-    text: 'Казахстан',
-    callback_data: 'kz'
-}]
-
 // Server
 require("dotenv").config()
 const express = require("express")

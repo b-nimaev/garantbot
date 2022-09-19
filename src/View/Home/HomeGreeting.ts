@@ -15,11 +15,11 @@ export async function greeting(ctx: MyContext) {
 
             // Если пользователь существует в базе данных
             if (user.role == 'buyer') {
-                await ctx.scene.enter("customer")
+                return await ctx.scene.enter("customer")
             }
 
             if (user.role == 'seller') {
-                await ctx.scene.enter('seller')
+                return await ctx.scene.enter('seller')
             }
 
         } else {

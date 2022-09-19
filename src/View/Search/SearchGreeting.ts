@@ -7,7 +7,7 @@ export async function greeting(ctx: MyContext) {
 
     if (ctx.from) {
         let user: IUser | null | undefined = await UserService.GetUserById(ctx)
-        console.log(user)
+
         if (user) {
             let message = `Ваш ID: <code>${user.id}</code> \nРоль: <code>${user.role}</code> \nВаш e-mail: <code>${user.email}</code>\n`;
 
@@ -21,8 +21,8 @@ export async function greeting(ctx: MyContext) {
                     inline_keyboard: [
                         [
                             {
-                                text: 'Открыть сделку',
-                                callback_data: 'openDeal'
+                                text: 'Остановить поиск',
+                                callback_data: 'stop_search'
                             }
                         ]
                     ]
@@ -30,6 +30,8 @@ export async function greeting(ctx: MyContext) {
             }
 
             await ctx.editMessageText(message, buyerExtraKeyboard)
+            ctx.answerCbQuery()
+            // ctx.wizard.next()
         }
 
     }

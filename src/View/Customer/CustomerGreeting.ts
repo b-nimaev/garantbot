@@ -32,7 +32,11 @@ export async function greeting(ctx: MyContext) {
                     ]
                 }
             }
-            ctx.update['callback_query'] ? ctx.answerCbQuery() : true
+
+            console.log('hey')
+            ctx.wizard.selectStep(0)
+            ctx.wizard.next()
+            ctx.update['callback_query'] ? ctx.answerCbQuery() : true;
             ctx.update['callback_query'] ? await ctx.editMessageText(message, buyerExtraKeyboard) : await ctx.reply(message, buyerExtraKeyboard)
         } else {
             ctx.scene.enter('home')

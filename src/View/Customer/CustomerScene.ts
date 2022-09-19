@@ -1,17 +1,24 @@
 import { Composer, Scenes } from "telegraf";
 import { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
 import { ExtraEditMessageText, ExtraReplyMessage } from "telegraf/typings/telegram-types";
-import { banks, currency } from "../..";
-import { UserService } from "../../Controller/db";
+import { currency } from "../..";
+import { ContextService } from "../../Controller/Context";
+import { IUser, UserService } from "../../Controller/db";
 import { MyContext } from "../../Model/Model";
 import { greeting } from "./CustomerGreeting";
 require("dotenv").config();
-
 async function selectCurrency(ctx: MyContext) {
     let query = ctx.update['callback_query']
     let data = query.data
 
     if (query) {
+
+        if (data == 'reset') {
+            return await UserService.ResetSettings(ctx)
+                .then(success => { return ctx.answerCbQuery('Настройки сброшены') })
+                .catch(error => { console.log(error); return false })
+        }
+
         currency.forEach(async (element) => {
             if (element.callback_data == data) {
                 let res = await UserService.SetCurrency(ctx, element).then(res => { console.log(res) }).catch((err) => { console.log(err) })
@@ -44,6 +51,12 @@ async function renderSelectCurrency(ctx: MyContext, user) {
                         text: 'USDT',
                         callback_data: 'usdt'
                     }
+                ],
+                [
+                    {
+                        text: 'Сбросить настройки',
+                        callback_data: 'reset'
+                    }
                 ]
             ]
         }
@@ -72,22 +85,94 @@ async function renderSearchDeal(ctx: MyContext) {
     await ctx.editMessageText(message, searchDealKeyboard)
 }
 
-async function selectBank(ctx: MyContext) {
+export async function renderSearchD(ctx: MyContext) {
+    // Если пользовтель найден
+    let user = await UserService.GetUserById(ctx)
+    if (user) {
+        // Если массив банков пуст, устанавливаем первичные значения
+        if (user.settings.banks?.length == 0) {
+            await renderSearchDeal(ctx)
+        } else if (user.settings.banks) {
+            if (user.settings.currency?.length !== 0) {
+                if (user.settings.currency) {
+                    // await renderSelectCurrency(ctx, user)
+                    let message = 'Выбранные банки: '
+                    for (let i = 0; i < user.settings.banks.length; i++) {
+                        message += `\n${i + 1}. ${user.settings.banks[i].text}`
+                    }
 
-    let query = ctx.update['callback_query']
-    let data = query.data
+                    message += '\nВыбранные валюты: '
+                    for (let i = 0; i < user.settings.currency?.length; i++) {
+                        message += `\n${i + 1}. ${user.settings.currency[i].text}`
+                    }
 
-    if (query) {
-        banks.forEach(async (element) => {
-            if (element.callback_data == data) {
-                await UserService.SetBank(ctx, element).then(res => { console.log(res) }).catch((err) => { console.log(err) })
-                let user = await UserService.GetUserById(ctx)
-                await renderSelectCurrency(ctx, user)
+                    const extra: ExtraEditMessageText = {
+                        parse_mode: 'HTML',
+                        reply_markup: {
+                            inline_keyboard: [
+                                [
+                                    {
+                                        text: 'Изменить параметры поиска',
+                                        callback_data: 'chagneSearchParams'
+                                    }
+                                ],
+                                [
+                                    {
+                                        text: 'Начать поиск',
+                                        callback_data: 'start_search'
+                                    }
+                                ],
+                                [
+                                    {
+                                        text: 'Назад',
+                                        callback_data: 'back'
+                                    }
+                                ]
+                            ]
+                        }
+                    }
+
+                    await ctx.editMessageText(message, extra)
+                    // return ctx.scene.enter('search')
+                }
+            } else {
+                renderSelectCurrency(ctx, user)
             }
-        })
+        }
+    } else {
+        // Если пользователя нет в базе данных
+        ctx.scene.enter('home')
     }
+}
 
-    ctx.answerCbQuery()
+async function searchScreen(ctx: MyContext) {
+    let user: IUser | null | undefined = await UserService.GetUserById(ctx)
+
+    if (user) {
+        let message = `Ваш ID: <code>${user.id}</code> \nРоль: <code>${user.role}</code> \nВаш e-mail: <code>${user.email}</code>\n`;
+
+        message += `Дата регистрации: ${user.date.registered} \n\n`;
+        message += `Чтобы остановить поиск можно нажать на кнопку ниже <b>Остановить поиск</b>, \n\n<b>или</b> отправить команду /stop_search \n\n`
+        message += `... Идёт поиск 🔎`;
+
+        const buyerExtraKeyboard: ExtraEditMessageText = {
+            parse_mode: 'HTML',
+            reply_markup: {
+                inline_keyboard: [
+                    [
+                        {
+                            text: 'Остановить поиск',
+                            callback_data: 'stop_search'
+                        }
+                    ]
+                ]
+            }
+        }
+
+        await ctx.editMessageText(message, buyerExtraKeyboard)
+        ctx.answerCbQuery()
+        // ctx.wizard.next()
+    }
 }
 
 // Поиск сделок
@@ -98,70 +183,27 @@ async function searchDeal(ctx: MyContext) {
 
     if (query) {
 
-        // Получение данных пользователя
-        let user = await UserService.GetUserById(ctx)
+        // // Получение данных пользователя
+        ctx.answerCbQuery()
 
         if (data == 'searchDeal') {
-            ctx.answerCbQuery()
-            // Если пользовтель найден
-            if (user) {
-                // Если массив банков пуст, устанавливаем первичные значения
-                if (user.settings.banks?.length == 0) {
-                    await renderSearchDeal(ctx)
-                } else if (user.settings.banks) {
-                    if (user.settings.currency?.length !== 0) {
-                        if (user.settings.currency) {
-                            // await renderSelectCurrency(ctx, user)
-                            let message = 'Выбранные банки: '
-                            for (let i = 0; i < user.settings.banks.length; i++) {
-                                message += `\n${i + 1}. ${user.settings.banks[i].text}`
-                            }
-
-                            message += '\nВыбранные валюты: '
-                            for (let i = 0; i < user.settings.currency?.length; i++) {
-                                message += `\n${i + 1}. ${user.settings.currency[i].text}`
-                            }
-
-                            const extra: ExtraEditMessageText = {
-                                parse_mode: 'HTML',
-                                reply_markup: {
-                                    inline_keyboard: [
-                                        [
-                                            {
-                                                text: 'Изменить параметры поиска',
-                                                callback_data: 'chagneSearchParams'
-                                            }
-                                        ],
-                                        [
-                                            {
-                                                text: 'Начать поиск',
-                                                callback_data: 'start_search'
-                                            }
-                                        ]
-                                    ]
-                                }
-                            }
-
-                            await ctx.editMessageText(message, extra)
-                            // return ctx.scene.enter('search')
-                        }
-                    } else {
-                        await renderSelectCurrency(ctx, user)
-                    }
-                }
-            } else {
-                // Если пользователя нет в базе данных
-                ctx.scene.enter('home')
-            }
-
+            return await renderSearchD(ctx)
         }
 
         if (data == 'start_search') {
-            return ctx.scene.enter('search')
+            return await searchScreen(ctx)
+        }
+
+        if (data == 'stop_search') {
+            return await renderSearchD(ctx)
         }
 
         if (data == 'chagneSearchParams') {
             return ctx.scene.enter('chagneSearchParams')
+        }
+
+        if (data == 'back') {
+            return await greeting(ctx)
         }
 
         if (data == 'setSettings') {
@@ -175,7 +217,12 @@ async function searchDeal(ctx: MyContext) {
                 }
             }
 
+            let banks: any = await UserService.GetBanks().then((response) => {
+                return response[0].data
+            })
+
             let temp: InlineKeyboardButton[] = []
+
             banks.forEach(async (element, index) => {
                 temp.push(element)
                 if (index % 2 == 1) {
@@ -208,13 +255,13 @@ const customer = new Scenes.WizardScene(
     "customer",
     handler,
     async (ctx) => searchDeal(ctx),
-    async (ctx) => selectBank(ctx),
+    async (ctx) => ContextService.selectBank(ctx),
     async (ctx) => selectCurrency(ctx),
 )
 
 handler.action('searchDeal', async (ctx) => searchDeal(ctx))
-
+// handler.action('back', async (ctx) => ctx.scene.enter('customer'))
 customer.leave(async (ctx) => console.log("customer scene leave"))
 customer.enter(async (ctx) => await greeting(ctx))
-customer.start(async (ctx) => await greeting(ctx))
+customer.start(async (ctx) => ctx.scene.enter('home'))
 export default customer
