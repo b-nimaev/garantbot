@@ -60,7 +60,7 @@ run().catch(err => console.log(err));
 
 export async function run() {
     // 4. Connect to MongoDB
-    await connect('mongodb://127.0.0.1:27017/bot_exchange');
+    await connect('mongodb://45.143.95.183:27017/bot_exchange');
 }
 
 export class UserService {
