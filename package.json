@@ -36,5 +36,13 @@
     "localtunnel": "^2.0.2",
     "nodemon": "^2.0.19",
     "ts-node": "^10.9.1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/b-nimaev/garantbot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/b-nimaev/garantbot/issues"
+  },
+  "homepage": "https://github.com/b-nimaev/garantbot#readme"
 }

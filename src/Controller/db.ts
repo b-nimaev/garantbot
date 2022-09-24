@@ -5,9 +5,9 @@ import { MyContext } from '../Model/Model';
 require("dotenv").config();
 let uri = <string>process.env.dbcon;
 
-export interface IData {
-    name: string,
-    data: object[]
+export interface IBank {
+    text: string,
+    callback_data: string
 }
 
 // 1. Create an interface representing a document in MongoDB.
@@ -27,6 +27,10 @@ export interface IUser extends User {
         banks: { text: string, callback_data: string }[] | null,
         currency: { text: string, callback_data: string }[] | null
     },
+    settings_buyer: {
+        banks: { text: string, callback_data: string }[] | null,
+        currency: { text: string, callback_data: string }[] | null,
+    }
 }
 
 // 2. Create a Schema corresponding to the document interface.
@@ -46,21 +50,25 @@ const userSchema = new Schema<IUser>({
         banks: [Object] || null,
         currency: [Object] || null
     },
+    settings_buyer: {
+        banks: [Object] || null,
+        currency: [Object] || null
+    }
 }, { timestamps: true });
 
-const dataSchema = new Schema<IData>({
-    name: String,
-    data: [Object]
+const bankSchema = new Schema<IBank>({
+    text: String,
+    callback_data: String
 })
 
 // 3. Create a Model.
 const UserModel = model<IUser>('User', userSchema);
-const DataModel = model<IData>('Data', dataSchema);
+const BankModel = model<IBank>('Bank', bankSchema);
 run().catch(err => console.log(err));
 
 export async function run() {
     // 4. Connect to MongoDB
-    await connect('mongodb://45.143.95.183:27017/bot_exchange');
+    await connect(uri + '/bot_exchange');
 }
 
 export class UserService {
@@ -92,6 +100,10 @@ export class UserService {
                 settings: {
                     banks: [],
                     currency: []
+                },
+                settings_buyer: {
+                    banks: [],
+                    currency: []
                 }
             }
 
@@ -110,6 +122,34 @@ export class UserService {
             return res
         } catch (error) {
             console.log(error)
+        }
+    }
+
+    static async SetBuyerCurrencies(ctx: MyContext) {
+        try {
+            return await UserModel.findOne({
+                id: ctx.from?.id
+            }).then(async (document) => {
+                if (document) {
+                    if (document.settings_buyer.currency) {
+                        if (document.settings_buyer.currency.length > 0) {
+                            console.log('Существует')
+                        } else {
+                            await UserModel.findOneAndUpdate({
+                                id: ctx.from?.id
+                            }, {
+                                $addToSet: {
+                                    "settings_buyer.currency": console.log(ctx.update['callback_query'].data)
+                                }
+                            })
+                        }
+                    } else {
+                        return false
+                    }
+                }
+            })
+        } catch (err) {
+
         }
     }
 
@@ -140,7 +180,7 @@ export class UserService {
     static async InsertBanks(arr) {
         try {
             arr.forEach(async (element: {}) => {
-                const res = await DataModel.updateOne({
+                const res = await BankModel.updateOne({
                     name: "banks"
                 }, {
                     $addToSet: { "data": element }
@@ -158,15 +198,13 @@ export class UserService {
             let user = await this.GetUserById(ctx)
             if (user) {
                 if (user.settings.banks) {
-                    user.settings.banks.forEach(async (search_element, index) => {
-                        if (search_element == element) {
-                            return await UserModel.updateOne({
-                                id: ctx.from?.id
-                            }, {
-                                $pull: {
-                                    "settings.banks": null
-                                }
-                            })
+                    return await UserModel.updateOne({
+                        id: ctx.from?.id
+                    }, {
+                        $pull: {
+                            "settings.banks": {
+                                "callback_data": element.callback_data
+                            }
                         }
                     })
                 }
@@ -202,13 +240,50 @@ export class UserService {
         }
     }
 
+    static async SetBanks() {
+        try {
+
+            let data: { text: string, callback_data: string }[]= [
+                {
+                    text: 'АльфаБанк',
+                    callback_data: 'alfabank'
+                },
+                {
+                    text: 'СберБанк',
+                    callback_data: 'sber'
+                },
+                {
+                    text: 'Тиньков',
+                    callback_data: 'tinkoff'
+                },
+                {
+                    text: 'Открытие',
+                    callback_data: 'open'
+                },
+                {
+                    text: 'МТС',
+                    callback_data: 'mts'
+                },
+                {
+                    text: 'ВТБ',
+                    callback_data: 'vtb'
+                },
+                {
+                    text: 'ГазпромБанк',
+                    callback_data: 'gazprom'
+                },
+                {
+                    text: 'QIWI',
+                    callback_data: 'qiwi'
+                }
+            ]
+            return await BankModel.insertMany(data)
+        } catch (err) { return false }
+    }
+
     static async GetBanks() {
         try {
-            let res = await DataModel.find({
-                "name": "banks"
-            })
-
-            return res
+            return await BankModel.find()
         } catch (err) {
             console.log(err)
             return []

@@ -10,11 +10,11 @@ export class ContextService {
             let user: IUser | null | undefined = await UserService.GetUserById(ctx)
 
             if (user) {
-                await UserService.SpliceBank(ctx, field)
+                return await UserService.SpliceBank(ctx, field)
                     .then(success => { return ctx.answerCbQuery('Элемент удален из базы данных') })
                     .catch(unsuccess => { return ctx.answerCbQuery('Не получилось удалить') })
 
-                return this.rerenderAfterSelectBank(ctx)
+                // return this.rerenderAfterSelectBank(ctx)
             }
 
         } catch (err) {
@@ -26,28 +26,27 @@ export class ContextService {
         try {
             let query = ctx.update['callback_query']
             let data = query.data.split(' ')
-            let banks: any = await UserService.GetBanks().then((response) => {
-                return response[0].data
-            })
+            let banks: { text: string, callback_data: string }[] = await UserService.GetBanks()
 
             if (query) {
                 if (data && banks.length > 0) {
                     if (data[0] !== 'remove_bank') {
-                        banks.forEach(async (element: any) => {
+                        banks.forEach(async (element: { text: string, callback_data: string }) => {
                             if (element.callback_data == data[0]) {
-                                await UserService.SetBank(ctx, element).then(res => { console.log(res) }).catch((err) => { console.log(err) })
+                                await UserService.SetBank(ctx, element)
+                                    .then(async res => { await ContextService.rerenderAfterSelectBank(ctx) })
+                                    .catch((err) => { console.log(err) })
                             }
                         })
-                        await ContextService.rerenderAfterSelectBank(ctx)
                     } else {
-                        banks.forEach(async (element: any) => {
+                        banks.forEach(async (element: { text: string, callback_data: string }) => {
                             if (element.callback_data == data[1]) {
-                                await this.spliceBankFromSettings(ctx, element)
-                                await this.rerenderAfterSelectBank(ctx)
+                                await this.spliceBankFromSettings(ctx, element).then(async () => {
+                                    await ContextService.rerenderAfterSelectBank(ctx)
+                                })
                             }
 
                         })
-
                     }
                 }
             }
@@ -63,21 +62,19 @@ export class ContextService {
             let user: IUser | null | undefined = await UserService.GetUserById(ctx)
 
             if (user) {
-                if (user.settings.banks?.length !== 0) {
-                    let message = `Выберите банки, в которые можете получать оплату \nВыбранные банки: `
+                let message = `Выберите банки, в которые можете получать оплату \nВыбранные банки: `
 
+                // @ts-ignore
+                for (let i = 0; i < user.settings.banks.length; i++) {
                     // @ts-ignore
-                    for (let i = 0; i < user.settings.banks.length; i++) {
-                        // @ts-ignore
-                        message += `\n${i + 1}. ${user.settings.banks[i].text}`
-                    }
+                    message += `\n${i + 1}. ${user.settings.banks[i].text}`
+                }
 
-                    let keyboard = await ContextService.renderSelectBankKeyboard(ctx)
-                    if (keyboard) {
-                        await ctx.editMessageText(message, keyboard)
-                    } else {
-                        ctx.scene.enter('home')
-                    }
+                let keyboard = await ContextService.renderSelectBankKeyboard(ctx)
+                if (keyboard) {
+                    await ctx.editMessageText(message, keyboard)
+                } else {
+                    ctx.scene.enter('home')
                 }
             }
         } catch (err) {
@@ -98,9 +95,7 @@ export class ContextService {
             let user: IUser | null | undefined = await UserService.GetUserById(ctx)
 
             if (user) {
-                let banks: any = await UserService.GetBanks().then((response) => {
-                    return response[0].data
-                })
+                let banks: { text: string, callback_data: string }[] = await UserService.GetBanks()
 
                 let temp: InlineKeyboardButton[] = []
 

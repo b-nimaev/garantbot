@@ -7,11 +7,10 @@ import { MyContext } from "../../Model/Model";
 import { greeting } from "./SellerGreeting";
 require("dotenv").config();
 
-const currency = ['usd', 'rub', 'byn', 'euro', 'kzt']
-
 async function renderSelectCurrency(ctx: MyContext) {
     let currencies = await CurrencyService.GetAllCurrencies()
-    console.log(currencies)
+    console.log(ctx.update['callback_query'].data)
+    return UserService.SetBuyerCurrencies(ctx)
 }
 
 async function selectCurrency(ctx: MyContext) {
@@ -28,7 +27,15 @@ const seller = new Scenes.WizardScene(
     async (ctx) => await selectCurrency(ctx)
 )
 
-handler.action('openDeal', async (ctx) => {
+handler.action(/./, async (ctx) => {
+    if (ctx.updateType == 'callback_query') {
+        await renderSelectCurrency(ctx)
+        ctx.answerCbQuery()
+    }
+})
+
+seller.action('openDeal', async (ctx) => {
+    console.log('123')
     
     try {
         let sellerExtraKeyboard: ExtraEditMessageText = {
@@ -40,17 +47,15 @@ handler.action('openDeal', async (ctx) => {
             }
         }
 
-
-        currency.forEach(async (element) => {
-            sellerExtraKeyboard.reply_markup?.inline_keyboard.push([{
-                text: element,
-                callback_data: element
-            }])
+        let currency = await CurrencyService.GetAllCurrencies()
+        // console.log(currency)
+        currency.forEach(async (button) => {
+            sellerExtraKeyboard.reply_markup?.inline_keyboard.push([button.element])
         })
     
         await ctx.editMessageText('Выберите валюту в которой будете покупать крипту', sellerExtraKeyboard)
     
-        ctx.wizard.next()
+        // ctx.wizard.next()
     } catch (err) {
         ctx.scene.enter('home')
     }
@@ -59,4 +64,5 @@ handler.action('openDeal', async (ctx) => {
 
 seller.leave(async (ctx) => console.log("seller scene leave"))
 seller.enter(async (ctx) => await greeting(ctx))
+seller.start(async (ctx) => ctx.scene.enter("home"))
 export default seller

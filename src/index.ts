@@ -9,6 +9,7 @@ import seller from './View/Seller/SellerScene';
 import customer from './View/Customer/CustomerScene';
 import search from './View/Search/SearchScene';
 import chagneSearchParams from './View/ChangeSearchParams/ChangeSearchParamsScene';
+import CurrencyService from './Controller/Services/Currecny.Services';
 
 // SSL
 const fs = require('fs');
@@ -38,10 +39,20 @@ if (token === undefined) {
     throw new Error('BOT_TOKEN must be provided!')
 }
 
+
 // Init scenes & set secretPath for requires from bot
 
 const scenes = [home, seller, customer, search, chagneSearchParams]
 const bot = new Telegraf<MyContext>(token)
+bot.command('set_banks', async (ctx) => {
+    try {
+        await UserService.SetBanks().then((data) => {
+            console.log(data)
+        })
+    } catch (err) {
+        console.log(err)
+    }
+})
 export default bot
 const app = express()
 const port = process.env.port

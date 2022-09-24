@@ -15,7 +15,7 @@ async function selectCurrency(ctx: MyContext) {
 
         if (data == 'reset') {
             return await UserService.ResetSettings(ctx)
-                .then(success => { return ctx.answerCbQuery('Настройки сброшены') })
+                .then(success => { ctx.answerCbQuery('Настройки сброшены'); ctx.scene.enter("home") })
                 .catch(error => { console.log(error); return false })
         }
 
@@ -217,9 +217,7 @@ async function searchDeal(ctx: MyContext) {
                 }
             }
 
-            let banks: any = await UserService.GetBanks().then((response) => {
-                return response[0].data
-            })
+            let banks: { text: string, callback_data: string }[] = await UserService.GetBanks()
 
             let temp: InlineKeyboardButton[] = []
 
@@ -255,7 +253,7 @@ const customer = new Scenes.WizardScene(
     "customer",
     handler,
     async (ctx) => searchDeal(ctx),
-    async (ctx) => ContextService.selectBank(ctx),
+    async (ctx) => await ContextService.selectBank(ctx),
     async (ctx) => selectCurrency(ctx),
 )
 
