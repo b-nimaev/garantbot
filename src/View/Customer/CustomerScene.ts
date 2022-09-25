@@ -30,7 +30,7 @@ async function selectCurrency(ctx: MyContext) {
     ctx.answerCbQuery()
 }
 
-async function renderSelectCurrency(ctx: MyContext, user) {
+export async function renderSelectCurrency(ctx: MyContext, user) {
     let message = `Вам нужно указать валюту \n\nСписок указанных вами банков`
     // \n<i>Настройки можно менять в настройках профиля</i>`
 

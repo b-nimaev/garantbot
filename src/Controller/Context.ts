@@ -1,6 +1,7 @@
 import { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
 import { ExtraEditMessageText } from "telegraf/typings/telegram-types";
 import { MyContext } from "../Model/Model";
+import { renderSelectCurrency } from "../View/Customer/CustomerScene";
 import { IUser, UserService } from "./db";
 
 export class ContextService {
@@ -25,6 +26,13 @@ export class ContextService {
     static async selectBank(ctx: MyContext) {
         try {
             let query = ctx.update['callback_query']
+
+            if (query.data == 'continue') {
+                let user: IUser | null | undefined = await UserService.GetUserById(ctx)
+                ctx.wizard.next()
+                await renderSelectCurrency(ctx, user)
+            }
+
             let data = query.data.split(' ')
             let banks: { text: string, callback_data: string }[] = await UserService.GetBanks()
 
@@ -124,6 +132,14 @@ export class ContextService {
                         temp = []
                     }
                 })
+
+                searchDealKeyboard.reply_markup?.inline_keyboard.push([
+                    {
+                        text: 'Продолжить',
+                        callback_data: 'continue'
+                    }
+                ])
+
 
                 return searchDealKeyboard
             } else {
