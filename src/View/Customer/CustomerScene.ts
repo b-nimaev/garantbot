@@ -146,45 +146,41 @@ export async function renderSearchD(ctx: MyContext) {
 }
 
 async function searchScreen(ctx: MyContext) {
-    let user: IUser | null | undefined = await UserService.GetUserById(ctx)
+    try {
+        let user: IUser | null | undefined = await UserService.GetUserById(ctx)
 
-    if (user) {
-        let message = `Ваш ID: <code>${user.id}</code> \nРоль: <code>${user.role}</code> \nВаш e-mail: <code>${user.email}</code>\n`;
-
-        var date = new Date(user.date.registered * 1000);
-        // Hours part from the timestamp
-        var hours = date.getHours();
-        // Minutes part from the timestamp
-        var minutes = "0" + date.getMinutes();
-        // Seconds part from the timestamp
-        var seconds = "0" + date.getSeconds();
-
-        // Will display time in 10:30:23 format
-        var formattedTime = hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
-
-        console.log(formattedTime);
-
-        message += `Дата регистрации: ${formattedTime} \n\n`;
-        message += `Чтобы остановить поиск можно нажать на кнопку ниже <b>Остановить поиск</b>, \n\n<b>или</b> отправить команду /stop_search \n\n`
-        message += `... Идёт поиск 🔎`;
-
-        const buyerExtraKeyboard: ExtraEditMessageText = {
-            parse_mode: 'HTML',
-            reply_markup: {
-                inline_keyboard: [
-                    [
-                        {
-                            text: 'Остановить поиск',
-                            callback_data: 'stop_search'
-                        }
+        if (user) {
+    
+            let timestmap = await ContextService.GetFormattedTime(user.date.registered)
+    
+            let message = `Ваш ID: <code>${user.id}</code> \n`
+                message += `Роль: <code>${user.role}</code> \n`
+                message += `Ваш e-mail: <code>${user.email}</code>\n`
+                message += `Дата регистрации: ${timestmap} \n\n`
+                message += `Чтобы остановить поиск можно нажать на кнопку ниже <b>Остановить поиск</b>,`
+                message += `\n\n<b>или</b> отправить команду /stop_search \n\n`
+                message += `... Идёт поиск 🔎`;
+    
+            const buyerExtraKeyboard: ExtraEditMessageText = {
+                parse_mode: 'HTML',
+                reply_markup: {
+                    inline_keyboard: [
+                        [
+                            {
+                                text: 'Остановить поиск',
+                                callback_data: 'stop_search'
+                            }
+                        ]
                     ]
-                ]
+                }
             }
+    
+            await ctx.editMessageText(message, buyerExtraKeyboard)
+            ctx.answerCbQuery()
+            // ctx.wizard.next()
         }
-
-        await ctx.editMessageText(message, buyerExtraKeyboard)
-        ctx.answerCbQuery()
-        // ctx.wizard.next()
+    } catch (err) {
+        ctx.scene.enter("home")
     }
 }
 
