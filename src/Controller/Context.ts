@@ -6,6 +6,26 @@ import { IUser, UserService } from "./db";
 
 export class ContextService {
 
+    static async GetFormattedTime(timestmap: number) {
+        var date = new Date(timestmap);
+        // Hours part from the timestamp
+        var hours = date.getHours();
+        // Minutes part from the timestamp
+        var minutes = "0" + date.getMinutes();
+        // Seconds part from the timestamp
+        var seconds = "0" + date.getSeconds();
+
+        var day = date.getDate()
+        var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+        var month = months[date.getMonth()];
+        var year = date.getFullYear()
+        // Will display time in 10:30:23 format
+        var formattedTime = day + ' ' + month + ' ' + year + ' ' + hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
+
+        return formattedTime
+    }
+
     static async spliceBankFromSettings(ctx: MyContext, field: { text: string, callback_data: string }) {
         try {
             let user: IUser | null | undefined = await UserService.GetUserById(ctx)

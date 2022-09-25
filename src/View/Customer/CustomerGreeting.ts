@@ -1,4 +1,5 @@
 import { ExtraEditMessageText, ExtraReplyMessage } from "telegraf/typings/telegram-types"
+import { ContextService } from "../../Controller/Context"
 import { IUser, UserService } from "../../Controller/db"
 import { MyContext } from "../../Model/Model"
 
@@ -7,7 +8,14 @@ export async function greeting(ctx: MyContext) {
     if (ctx.from) {
         let user: IUser | null | undefined = await UserService.GetUserById(ctx)
         if (user) {
-            let message = `Ваш ID: <code>${user.id}</code> \nРоль: <code>Покупатель</code> \nВаш e-mail: <code>${user.email}</code> \nДата регистрации: ${user.date.registered} \n\nЧтобы начать работу, нажмите на кнопку ниже <b>Найти сделку</b>`
+     
+            let date = await ContextService.GetFormattedTime(user.date.registered)
+
+            let message = `Ваш ID: <code>${user.id}</code>\n`
+                message += `Роль: <code>Покупатель</code>\n`
+                message += `Ваш e-mail: <code>${user.email}</code>\n`
+                message += `Дата регистрации: <code>${date}</code>\n\n`
+                message += `Чтобы начать работу, нажмите на кнопку ниже <b>Найти сделку</b>`
 
             const buyerExtraKeyboard: ExtraEditMessageText = {
                 parse_mode: 'HTML',

@@ -151,7 +151,20 @@ async function searchScreen(ctx: MyContext) {
     if (user) {
         let message = `Ваш ID: <code>${user.id}</code> \nРоль: <code>${user.role}</code> \nВаш e-mail: <code>${user.email}</code>\n`;
 
-        message += `Дата регистрации: ${user.date.registered} \n\n`;
+        var date = new Date(user.date.registered * 1000);
+        // Hours part from the timestamp
+        var hours = date.getHours();
+        // Minutes part from the timestamp
+        var minutes = "0" + date.getMinutes();
+        // Seconds part from the timestamp
+        var seconds = "0" + date.getSeconds();
+
+        // Will display time in 10:30:23 format
+        var formattedTime = hours + ':' + minutes.substr(-2) + ':' + seconds.substr(-2);
+
+        console.log(formattedTime);
+
+        message += `Дата регистрации: ${formattedTime} \n\n`;
         message += `Чтобы остановить поиск можно нажать на кнопку ниже <b>Остановить поиск</b>, \n\n<b>или</b> отправить команду /stop_search \n\n`
         message += `... Идёт поиск 🔎`;
 
