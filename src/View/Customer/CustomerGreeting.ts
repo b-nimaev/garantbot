@@ -6,7 +6,7 @@ import { MyContext } from "../../Model/Model"
 export async function greeting(ctx: MyContext) {
 
     if (ctx.from) {
-        let user: IUser | null | undefined = await UserService.GetUserById(ctx)
+        let user: IUser | null | false = await UserService.GetUserById(ctx)
         if (user) {
      
             let date = await ContextService.GetFormattedTime(user.date.registered)
@@ -41,8 +41,7 @@ export async function greeting(ctx: MyContext) {
                 }
             }
 
-            console.log('hey')
-            ctx.wizard.selectStep(0)
+            ctx.wizard.selectStep(1)
             // ctx.wizard.next()
             ctx.update['callback_query'] ? ctx.answerCbQuery() : true;
             ctx.update['callback_query'] ? await ctx.editMessageText(message, buyerExtraKeyboard) : await ctx.reply(message, buyerExtraKeyboard)

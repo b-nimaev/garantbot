@@ -4,6 +4,7 @@ import { UserService } from "../../Controller/db";
 import CurrencyService from "../../Controller/Services/Currecny.Services";
 // import * as EmailValidator from 'email-validator';
 import { MyContext } from "../../Model/Model";
+import ICurrency from "../../Model/Services.Currency.Model";
 import { greeting } from "./SellerGreeting";
 require("dotenv").config();
 
@@ -34,9 +35,7 @@ handler.action(/./, async (ctx) => {
     }
 })
 
-seller.action('openDeal', async (ctx) => {
-    console.log('123')
-    
+seller.action('openDeal', async (ctx) => {    
     try {
         let sellerExtraKeyboard: ExtraEditMessageText = {
             parse_mode: 'HTML',
@@ -49,11 +48,20 @@ seller.action('openDeal', async (ctx) => {
 
         let currency = await CurrencyService.GetAllCurrencies()
         // console.log(currency)
-        currency.forEach(async (button) => {
-            sellerExtraKeyboard.reply_markup?.inline_keyboard.push([button.element])
+        let temp: { text: string; callback_data: string }[] = []
+        currency.forEach(async (button, index) => {
+            temp.push(button.element)
+            if (index % 2 == 1) {
+                sellerExtraKeyboard.reply_markup?.inline_keyboard.push(temp)
+                temp = []
+            }
+
+            if ((currency.length == index + 1) && (index % 2 !== 1)) {
+                sellerExtraKeyboard.reply_markup?.inline_keyboard.push(temp)
+            }
         })
     
-        await ctx.editMessageText('Выберите валюту в которой будете покупать крипту', sellerExtraKeyboard)
+        await ctx.editMessageText('Выберите валюту', sellerExtraKeyboard)
     
         // ctx.wizard.next()
     } catch (err) {

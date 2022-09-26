@@ -10,6 +10,7 @@ import customer from './View/Customer/CustomerScene';
 import search from './View/Search/SearchScene';
 import chagneSearchParams from './View/ChangeSearchParams/ChangeSearchParamsScene';
 import CurrencyService from './Controller/Services/Currecny.Services';
+import { ContextService } from './Controller/Context';
 
 // SSL
 const fs = require('fs');
@@ -20,13 +21,6 @@ const https = require('https');
 const morgan = require("morgan")
 const cors = require("cors")
 const BodyParser = require("body-parser")
-export const currency = [{
-    text: 'BTC',
-    callback_data: 'btc'
-}, {
-    text: 'USDT',
-    callback_data: 'usdt'
-}]
 
 // Server
 require("dotenv").config()
@@ -53,6 +47,15 @@ bot.command('set_banks', async (ctx) => {
         console.log(err)
     }
 })
+
+bot.command('set_crypto', async (ctx) => {
+    try {
+        await CurrencyService.SetCryptoCurrenciesArray().then(() => ctx.reply("Крипта записана!"))
+    } catch (err) {
+        console.log(err)
+    }
+})
+
 export default bot
 const app = express()
 const port = process.env.port

@@ -28,7 +28,7 @@ export class ContextService {
 
     static async spliceBankFromSettings(ctx: MyContext, field: { text: string, callback_data: string }) {
         try {
-            let user: IUser | null | undefined = await UserService.GetUserById(ctx)
+            let user: IUser | null | false = await UserService.GetUserById(ctx)
 
             if (user) {
                 return await UserService.SpliceBank(ctx, field)
@@ -48,9 +48,9 @@ export class ContextService {
             let query = ctx.update['callback_query']
 
             if (query.data == 'continue') {
-                let user: IUser | null | undefined = await UserService.GetUserById(ctx)
-                ctx.wizard.next()
-                await renderSelectCurrency(ctx, user)
+                let user: IUser | null | false = await UserService.GetUserById(ctx)
+                ctx.wizard.selectStep(3)
+                await renderSelectCurrency(ctx)
             }
 
             let data = query.data.split(' ')
@@ -87,7 +87,7 @@ export class ContextService {
 
     static async rerenderAfterSelectBank(ctx: MyContext) {
         try {
-            let user: IUser | null | undefined = await UserService.GetUserById(ctx)
+            let user: IUser | null | false = await UserService.GetUserById(ctx)
 
             if (user) {
                 let message = `Выберите банки, в которые можете получать оплату \nВыбранные банки: `
@@ -120,7 +120,7 @@ export class ContextService {
         }
 
         try {
-            let user: IUser | null | undefined = await UserService.GetUserById(ctx)
+            let user: IUser | null | false = await UserService.GetUserById(ctx)
 
             if (user) {
                 let banks: { text: string, callback_data: string }[] = await UserService.GetBanks()
@@ -177,7 +177,7 @@ export class ContextService {
 
             if (ctx.from) {
 
-                let user: IUser | null | undefined = await UserService.GetUserById(ctx)
+                let user: IUser | null | false = await UserService.GetUserById(ctx)
 
                 if (user) {
                     let message = `Ваш ID: <code>${user.id}</code> \nРоль: <code>${user.role}</code> \nВаш e-mail: <code>${user.email}</code>\n`;

@@ -1,5 +1,7 @@
 import { model, Schema } from "mongoose"
+import { MyContext } from "../../Model/Model"
 import ICurrency from "../../Model/Services.Currency.Model"
+import { IUser, UserService } from "../db"
 
 const CurrenciesShema = new Schema<ICurrency>({
     field: String,
@@ -10,8 +12,59 @@ const CurrenciesShema = new Schema<ICurrency>({
 })
 
 const CurrencyModel = model<ICurrency>('currencie', CurrenciesShema)
+const CryptoCurrencyModel = model<ICurrency>('crypto_currencie', CurrenciesShema)
 
 export default class CurrencyService {
+
+    static async spliceCurrency(ctx: MyContext, field: { text: string, callback_data: string }) {
+        try {
+            let user: IUser | false | null = await UserService.GetUserById(ctx)
+
+            if (user) {
+                return await UserService.SpliceBank(ctx, field)
+                    .then(success => { return ctx.answerCbQuery('Элемент удален из базы данных') })
+                    .catch(unsuccess => { return ctx.answerCbQuery('Не получилось удалить') })
+
+                // return this.rerenderAfterSelectBank(ctx)
+            }
+
+        } catch (err) {
+            console.log(err)
+        }
+    }
+
+    static async GetCryptoCurrenciesArray() {
+        try {
+
+            return await CryptoCurrencyModel.find()
+
+        } catch (err) {
+            console.log(err)
+            return []
+        }
+    }
+
+    static async SetCryptoCurrenciesArray() {
+        try {
+
+            let currency = [ 'btc', 'usdt' ]
+            
+            let docs: ICurrency[] = []
+            currency.forEach(async element => {
+                docs.push({
+                    field: element,
+                    element: {
+                        "text": element,
+                        "callback_data": element
+                    }
+                })
+            })
+            return await CryptoCurrencyModel.insertMany(docs)
+        } catch (err) {
+            console.log(err)
+            return false
+        }
+    }
 
     static async SetCurrenciesArray () {
         try {
@@ -54,4 +107,4 @@ export default class CurrencyService {
             return false
         }
     }
-}
+} 

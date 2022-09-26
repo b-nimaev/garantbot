@@ -24,35 +24,35 @@ export interface IUser extends User {
         registered: number
     },
     settings: {
-        banks: { text: string, callback_data: string }[] | null,
-        currency: { text: string, callback_data: string }[] | null
+        banks: { text: string, callback_data: string }[],
+        currency: { text: string, callback_data: string }[]
     },
     settings_buyer: {
-        banks: { text: string, callback_data: string }[] | null,
-        currency: { text: string, callback_data: string }[] | null,
+        banks: { text: string, callback_data: string }[],
+        currency: { text: string, callback_data: string }[],
     }
 }
 
 // 2. Create a Schema corresponding to the document interface.
 const userSchema = new Schema<IUser>({
-    id: Number || undefined,
-    name: String || undefined,
+    id: Number,
+    name: String,
     email: String,
     avatar: String,
     is_bot: Boolean,
     role: String,
-    first_name: String || undefined,
+    first_name: String,
     lastModified: { type: Number, required: true },
     date: {
         registered: Number
     },
     settings: {
-        banks: [Object] || null,
-        currency: [Object] || null
+        banks: [Object],
+        currency: [Object]
     },
     settings_buyer: {
-        banks: [Object] || null,
-        currency: [Object] || null
+        banks: [Object],
+        currency: [Object]
     }
 }, { timestamps: true });
 
@@ -76,8 +76,7 @@ export class UserService {
     // Получение всех пользователей
     static async GetAllUsers() {
         try {
-            const allArticles = await UserModel.find();
-            return allArticles;
+            return await UserModel.find();
         } catch (error) {
             console.log(`Could not fetch users ${error}`)
         }
@@ -116,12 +115,12 @@ export class UserService {
 
     static async GetUserById(ctx: MyContext) {
         try {
-            const res: IUser | null = await UserModel.findOne({
+            return await UserModel.findOne({
                 id: ctx.from?.id
             })
-            return res
         } catch (error) {
             console.log(error)
+            return false
         }
     }
 
@@ -214,6 +213,28 @@ export class UserService {
         }
     }
 
+    static async SpliceCurrency(ctx: MyContext, callback_data: string) {
+        try {
+
+            let user = await this.GetUserById(ctx)
+            if (user) {
+                if (user.settings.banks) {
+                    return await UserModel.updateOne({
+                        id: ctx.from?.id
+                    }, {
+                        $pull: {
+                            "settings.currency": {
+                                "callback_data": callback_data
+                            }
+                        }
+                    })
+                }
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    }
+
     static async SetCurrency(ctx: MyContext, element) {
         try {
             const res = await UserModel.updateOne({
@@ -232,7 +253,7 @@ export class UserService {
             const res = await UserModel.updateOne({
                 id: ctx.from?.id
             }, {
-                $unset: { "settings.banks": "" }
+                $unset: { "settings.banks": "", "settings.currency": "" }
             })
             return res
         } catch (err) {
