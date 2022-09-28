@@ -18,15 +18,15 @@ export default class CurrencyService {
 
     static async spliceCurrency(ctx: MyContext, field: { text: string, callback_data: string }) {
         try {
-            let user: IUser | false | null = await UserService.GetUserById(ctx)
-
-            if (user) {
-                return await UserService.SpliceBank(ctx, field)
-                    .then(success => { return ctx.answerCbQuery('Элемент удален из базы данных') })
-                    .catch(unsuccess => { return ctx.answerCbQuery('Не получилось удалить') })
-
-                // return this.rerenderAfterSelectBank(ctx)
-            }
+            await UserService.GetUserById(ctx).then(async (user) => {
+                if (user) {
+                    return await UserService.SpliceBank(ctx, field)
+                        .then(success => { return ctx.answerCbQuery('Элемент удален из базы данных') })
+                        .catch(unsuccess => { return ctx.answerCbQuery('Не получилось удалить') })
+    
+                    // return this.rerenderAfterSelectBank(ctx)
+                }
+            })
 
         } catch (err) {
             console.log(err)

@@ -2,7 +2,9 @@ import mongoose, { Schema, model, connect } from 'mongoose';
 import { Models } from 'mongoose';
 import { User } from 'telegraf/typings/core/types/typegram';
 import { MyContext } from '../Model/Model';
+import ICurrency from '../Model/Services.Currency.Model';
 require("dotenv").config();
+const autoIncrement = require('mongoose-auto-increment');
 let uri = <string>process.env.dbcon;
 
 export interface IBank {
@@ -25,13 +27,43 @@ export interface IUser extends User {
     },
     settings: {
         banks: { text: string, callback_data: string }[],
-        currency: { text: string, callback_data: string }[]
+        currency: { text: string, callback_data: string }[],
+        crypto_currency?: { text: string, callback_data: string }[],
+        payment_method?: string,
+        crypto_address?: string,
+        pre_sum: number,
     },
+    ads?: {
+        banks: { text: string, callback_data: string }[],
+        currency: { text: string, callback_data: string }[],
+        crypto_currency: { text: string, callback_data: string }[],
+        amount: number,
+        sum: number,
+        date: number,
+    }[] | null,
     settings_buyer: {
         banks: { text: string, callback_data: string }[],
         currency: { text: string, callback_data: string }[],
     }
 }
+
+interface IAds {
+    banks: IBank[],
+    currency: ICurrency[],
+    crypto_currency: ICurrency[],
+    amount: number,
+    sum: number,
+    date: number,
+}
+
+const adsSchema = new Schema<IAds>({
+    banks: [{ text: String, callback_data: String }],
+    currency: [{ text: String, callback_data: String }],
+    crypto_currency: [{ text: String, callback_data: String }],
+    amount: Number,
+    sum: Number,
+    date: Number,
+})
 
 // 2. Create a Schema corresponding to the document interface.
 const userSchema = new Schema<IUser>({
@@ -48,8 +80,13 @@ const userSchema = new Schema<IUser>({
     },
     settings: {
         banks: [Object],
-        currency: [Object]
+        currency: [Object],
+        crypto_currency: [{ text: String, callback_data: String }],
+        crypto_address: String || undefined || null,
+        payment_method: String || undefined || null,
+        pre_sum: Number,
     },
+    ads: [adsSchema],
     settings_buyer: {
         banks: [Object],
         currency: [Object]
@@ -64,6 +101,8 @@ const bankSchema = new Schema<IBank>({
 // 3. Create a Model.
 const UserModel = model<IUser>('User', userSchema);
 const BankModel = model<IBank>('Bank', bankSchema);
+const ADSModel = model<IAds>('ads', adsSchema);
+
 run().catch(err => console.log(err));
 
 export async function run() {
@@ -72,6 +111,59 @@ export async function run() {
 }
 
 export class UserService {
+
+    static async SaveSum(ctx: MyContext, sum: number) {
+        try {
+            console.log(sum)
+            return await UserModel.findOneAndUpdate({
+                id: ctx.from?.id
+            }, {
+                $set: {
+                    "settings.pre_sum": sum
+                }
+            }, {
+                upsert: true
+            })
+
+        } catch (err) {
+            console.log(err)
+            return err
+        }
+    }
+
+    static async CreateAds(ctx: MyContext, user: IUser) {
+        try {
+
+            let item: any = {
+                banks: user.settings.banks,
+                currency: user.settings.currency,
+                crypto_currency: user.settings.crypto_currency,
+                sum: user.settings.pre_sum,
+                date: Date.now()
+            }
+
+            await UserModel.findOneAndUpdate({
+                id: ctx.from?.id
+            }, {
+                $addToSet: {
+                    "ads": item
+                }
+            })
+
+            return await UserModel.findOne({
+                id: ctx.from?.id
+            }).then(async (document) => {
+                if (document) {
+                    if (document.ads) {
+                        return document?.ads[document.ads.length - 1]
+                    }
+                }
+            })
+        } catch (error) {
+            console.log(error)
+            return error
+        }
+    }
 
     // Получение всех пользователей
     static async GetAllUsers() {
@@ -98,7 +190,8 @@ export class UserService {
                 },
                 settings: {
                     banks: [],
-                    currency: []
+                    currency: [],
+                    pre_sum: 0,
                 },
                 settings_buyer: {
                     banks: [],
@@ -120,7 +213,6 @@ export class UserService {
             })
         } catch (error) {
             console.log(error)
-            return false
         }
     }
 
@@ -152,12 +244,25 @@ export class UserService {
         }
     }
 
+    static async SetCryptoCurrency(ctx: MyContext, data: { text: string, callback_data: string }) {
+        try {
+            return await UserModel.findOneAndUpdate({
+                id: ctx.from?.id
+            }, {
+                $set: {
+                    "settings.crypto_currency": data
+                }
+            })
+        } catch (err) {
+
+        }
+    }
+
     static async SetRole(ctx: MyContext) {
         try {
-            const res = await UserModel.updateOne({
-                id: ctx.from?.id
-            }, { $set: { role: ctx.update["callback_query"].data } })
-            return res
+            let role = ctx.update["callback_query"].data
+            return await UserModel.updateOne({ id: ctx.from?.id }, { $set: { role: role } })
+                .then(() => { ctx.scene.enter(role) })
         } catch (error) {
             console.log(error)
         }
@@ -264,7 +369,7 @@ export class UserService {
     static async SetBanks() {
         try {
 
-            let data: { text: string, callback_data: string }[]= [
+            let data: { text: string, callback_data: string }[] = [
                 {
                     text: 'АльфаБанк',
                     callback_data: 'alfabank'

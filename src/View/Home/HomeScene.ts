@@ -12,11 +12,12 @@ const home = new Scenes.WizardScene(
     handler
 )
 
-handler.action('seller', async (ctx) => await ctx.scene.enter("seller"))
-handler.action('buyer', async (ctx) => await ctx.scene.enter("customer"))
-
-home.action('seller', async (ctx) => await ctx.scene.enter("seller"))
-home.action('buyer', async (ctx) => await ctx.scene.enter("customer"))
+home.action('seller', async (ctx) => {
+    return await UserService.SetRole(ctx)
+})
+home.action('customer', async (ctx) => {
+    return await UserService.SetRole(ctx)
+})
 
 
 home.leave(async (ctx) => console.log("home leave"))

@@ -28,7 +28,7 @@ export class ContextService {
 
     static async spliceBankFromSettings(ctx: MyContext, field: { text: string, callback_data: string }) {
         try {
-            let user: IUser | null | false = await UserService.GetUserById(ctx)
+            let user: IUser | null | false | undefined = await UserService.GetUserById(ctx)
 
             if (user) {
                 return await UserService.SpliceBank(ctx, field)
@@ -45,41 +45,45 @@ export class ContextService {
 
     static async selectBank(ctx: MyContext) {
         try {
-            let query = ctx.update['callback_query']
+            if (ctx.updateType == 'callback_query') {
+                let query = ctx.update['callback_query']
 
-            if (query.data == 'continue') {
-                let user: IUser | null | false = await UserService.GetUserById(ctx)
-                ctx.wizard.selectStep(3)
-                await renderSelectCurrency(ctx)
-            }
-
-            let data = query.data.split(' ')
-            let banks: { text: string, callback_data: string }[] = await UserService.GetBanks()
-
-            if (query) {
-                if (data && banks.length > 0) {
-                    if (data[0] !== 'remove_bank') {
-                        banks.forEach(async (element: { text: string, callback_data: string }) => {
-                            if (element.callback_data == data[0]) {
-                                await UserService.SetBank(ctx, element)
-                                    .then(async res => { await ContextService.rerenderAfterSelectBank(ctx) })
-                                    .catch((err) => { console.log(err) })
-                            }
-                        })
-                    } else {
-                        banks.forEach(async (element: { text: string, callback_data: string }) => {
-                            if (element.callback_data == data[1]) {
-                                await this.spliceBankFromSettings(ctx, element).then(async () => {
-                                    await ContextService.rerenderAfterSelectBank(ctx)
-                                })
-                            }
-
-                        })
+                if (query.data == 'continue') {
+                    // let user: IUser | null | false | undefined = await UserService.GetUserById(ctx)
+                    // ctx.wizard.selectStep(3)
+                    // await renderSelectCurrency(ctx)
+                    ctx.editMessageText(`Укажите сумму в рублях`)
+                    ctx.wizard.selectStep(4)
+                }
+    
+                let data = query.data.split(' ')
+                let banks: { text: string, callback_data: string }[] = await UserService.GetBanks()
+    
+                if (query) {
+                    if (data && banks.length > 0) {
+                        if (data[0] !== 'remove_bank') {
+                            banks.forEach(async (element: { text: string, callback_data: string }) => {
+                                if (element.callback_data == data[0]) {
+                                    await UserService.SetBank(ctx, element)
+                                        .then(async res => { await ContextService.rerenderAfterSelectBank(ctx) })
+                                        .catch((err) => { console.log(err) })
+                                }
+                            })
+                        } else {
+                            banks.forEach(async (element: { text: string, callback_data: string }) => {
+                                if (element.callback_data == data[1]) {
+                                    await this.spliceBankFromSettings(ctx, element).then(async () => {
+                                        await ContextService.rerenderAfterSelectBank(ctx)
+                                    })
+                                }
+    
+                            })
+                        }
                     }
                 }
+    
+                ctx.answerCbQuery()
             }
-
-            ctx.answerCbQuery()
         } catch (err) {
             console.log(err)
         }
@@ -87,7 +91,7 @@ export class ContextService {
 
     static async rerenderAfterSelectBank(ctx: MyContext) {
         try {
-            let user: IUser | null | false = await UserService.GetUserById(ctx)
+            let user: IUser | null | false | undefined = await UserService.GetUserById(ctx)
 
             if (user) {
                 let message = `Выберите банки, в которые можете получать оплату \nВыбранные банки: `
@@ -120,7 +124,7 @@ export class ContextService {
         }
 
         try {
-            let user: IUser | null | false = await UserService.GetUserById(ctx)
+            let user: IUser | null | false | undefined = await UserService.GetUserById(ctx)
 
             if (user) {
                 let banks: { text: string, callback_data: string }[] = await UserService.GetBanks()
@@ -177,7 +181,7 @@ export class ContextService {
 
             if (ctx.from) {
 
-                let user: IUser | null | false = await UserService.GetUserById(ctx)
+                let user: IUser | null | false | undefined = await UserService.GetUserById(ctx)
 
                 if (user) {
                     let message = `Ваш ID: <code>${user.id}</code> \nРоль: <code>${user.role}</code> \nВаш e-mail: <code>${user.email}</code>\n`;
