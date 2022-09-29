@@ -26,7 +26,7 @@ export async function greeting(ctx: MyContext) {
                                 [
                                     {
                                         text: 'Создать объявление',
-                                        callback_data: 'searchDeal'
+                                        callback_data: 'create'
                                     },
                                 ],
                                 [

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-floating-promises */
 import { Markup, Scenes, session, Telegraf } from 'telegraf'
-import { UserService } from './Controller/db';
+import { PaymentService, UserService } from './Controller/db';
 import { MyContext } from './Model/Model'
 
 // Scenes
@@ -53,6 +53,14 @@ bot.command('set_crypto', async (ctx) => {
         await CurrencyService.SetCryptoCurrenciesArray().then(() => ctx.reply("Крипта записана!"))
     } catch (err) {
         console.log(err)
+    }
+})
+
+bot.command('set_payments', async (ctx) => {
+    try {
+        await PaymentService.InsertPayments(ctx)
+    } catch (err) {
+        await ctx.reply("Что-то не так")
     }
 })
 
