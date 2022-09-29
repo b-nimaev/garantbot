@@ -27,6 +27,11 @@ export default class CustomerService {
                 return await this.UserBanksRender(ctx)
             }
 
+            if (callback_data == 'my_ads') {
+                ctx.wizard.selectStep(10)
+                await AService.get_ads(ctx)
+            }
+
             ctx.answerCbQuery()
         }
     }
@@ -165,30 +170,30 @@ export default class CustomerService {
                             inline_keyboard: []
                         }
                     }
-    
+
                     let user = await UserService.GetUserById(ctx)
                     let buttons: InlineKeyboardButton[] = []
                     methods.forEach(async (method) => {
                         if (user) {
                             let user_methods = user?.settings.payment_method
-                            
+
                             if (user_methods) {
                                 if (user_methods.length > 0) {
                                     user_methods.forEach(async (user_method) => {
                                         let temp = user_method.text + ' (удалить)'
-    
+
                                         if ((method.callback_data === user_method.callback_data)) {
                                             method.text += ' (удалить)'
                                             method.callback_data = 'remove_method ' + method.callback_data
                                         }
-    
-                                        
+
+
                                     })
                                 }
                             }
-                            
+
                             extra.reply_markup?.inline_keyboard.push([method])
-    
+
                         }
                     })
 
@@ -206,7 +211,7 @@ export default class CustomerService {
                             }
                         }
                     }
-    
+
                     return await ctx.editMessageText(message, extra)
                 } else {
                     await ctx.reply('Нет доступных способов оплаты! \nОтправьте команду /set_payments')
@@ -224,7 +229,7 @@ export default class CustomerService {
 
             if (callback_data == 'continue') {
                 return this.crypto_wallets(ctx)
-                
+
             }
 
             let splitted = callback_data.split(' ')
@@ -256,7 +261,11 @@ export default class CustomerService {
             if (!user?.settings.crypto_address?.length) {
                 let message = `Отправьте адрес криптокошелька`
                 ctx.wizard.selectStep(7)
-                await ctx.editMessageText(message)
+                if (ctx.updateType == 'callback_query') {
+                    await ctx.editMessageText(message)
+                } else {
+                    await ctx.reply(message)
+                }
             } else {
                 let message = `Выберите адрес криптокошелька`
                 let extra: ExtraEditMessageText = {
@@ -267,7 +276,7 @@ export default class CustomerService {
                 }
 
                 user.settings.crypto_address.forEach(async (element, index) => {
-                    message += `\n${index+1}. <code>${element}</code>`
+                    message += `\n${index + 1}. <code>${element}</code>`
                     extra.reply_markup?.inline_keyboard.push([{
                         text: `${index + 1}`,
                         callback_data: `select_wallet ` + index
@@ -278,6 +287,8 @@ export default class CustomerService {
                     text: 'Указать новый кошелёк',
                     callback_data: 'new_wallet'
                 }])
+
+                message += `\n\nЧтобы удалить кошелёк отправьте <code><b>/delete адрес_кошелька</b></code>`
 
                 ctx.wizard.selectStep(8)
                 await ctx.editMessageText(message, extra)
@@ -302,13 +313,14 @@ export default class CustomerService {
                 let split = callback_data.split(' ')
                 if (split[0] == 'select_wallet') {
                     let index = split[1]
-
                     let user = await UserService.GetUserById(ctx)
                     if (user) {
                         if (user.settings.crypto_address?.length) {
                             user.settings.crypto_address.forEach(async (element, db_index) => {
                                 if (index == db_index) {
-                                    return await ctx.editMessageText(`${element}  выбран!`)
+                                    await UserService.PreSaveAddress(ctx, element)
+                                    return await CCurrencies.amount_render(ctx)
+                                    // return await ctx.editMessageText(`${element}  выбран!`)
                                 }
                             })
                         }
@@ -317,6 +329,72 @@ export default class CustomerService {
                 }
 
             }
+
+            if (ctx.updateType == 'message') {
+                let message = ctx.update["message"].text
+                let data = message.split(' ')
+
+                if (data[0] == '/delete') {
+                    // ctx.reply(`${data[1]} удалён`)
+                    await UserService.DeleteAddress(ctx, data[1]).then(async (result) => {
+                        console.log(result)
+                    })
+
+                }
+
+            }
+        } catch (err) {
+            console.log(err)
+        }
+    }
+
+    static async after_select_wallet(ctx: MyContext) {
+        try {
+
+            let user = await UserService.GetUserById(ctx)
+            if (user) {
+                let message = `Проверка перед публикацией`
+                message += `\nБанк: `
+                user.settings.banks.forEach(async (user_bank, index) => {
+                    if (user?.settings.banks.length == index + 1) {
+                        message += `${user_bank.text}`
+                    } else {
+                        message += `${user_bank.text}, `
+                    }
+                })
+
+                message += `\nСпособ оплаты: `
+                user.settings.payment_method?.forEach(async (user_payment_method, index) => {
+                    if (user?.settings.payment_method?.length == index + 1) {
+                        message += `${user_payment_method.text}`
+                    } else {
+                        message += `${user_payment_method.text}, `
+                    }
+                })
+
+                let extra: ExtraEditMessageText = {
+                    parse_mode: 'HTML',
+                    reply_markup: {
+                        inline_keyboard: [
+                            [
+                                {
+                                    text: 'Опубликовать',
+                                    callback_data: 'publicate'
+                                }
+                            ],
+                            [
+                                {
+                                    text: 'На главную',
+                                    callback_data: 'to_home'
+                                }
+                            ]
+                        ]
+                    }
+                }
+
+                ctx.editMessageText(message, extra)
+            }
+
         } catch (err) {
             console.log(err)
         }
@@ -351,7 +429,7 @@ export default class CustomerService {
 
         if (ctx.updateType == 'callback_query') {
             let data = ctx.update["callback_query"].data
-            
+
             if (data == 'continue') {
                 let user = await UserService.GetUserById(ctx)
 
@@ -360,6 +438,7 @@ export default class CustomerService {
                 }
 
                 await UserService.SaveCryptoAddress(ctx)
+                await CCurrencies.render(ctx)
                 ctx.answerCbQuery('Кошелёк сохранён!')
             }
 
@@ -518,6 +597,16 @@ export class SumService {
                             }
 
                         })
+
+
+                        message_result += `\n<b>Способ оплаты: </b>`
+                        user.settings.payment_method?.forEach(async (user_payment_method, index) => {
+                            if (user?.settings.payment_method?.length == index + 1) {
+                                message_result += `${user_payment_method.text}`
+                            } else {
+                                message_result += `${user_payment_method.text}, `
+                            }
+                        })
                         await ctx.reply(message_result, extra)
                     }
                 }
@@ -538,6 +627,7 @@ export class SumService {
             }
 
             if (data == 'my_ads') {
+                await ctx.wizard.selectStep(10)
                 await AService.get_ads(ctx)
                 ctx.answerCbQuery('Мои объявления...')
             }
@@ -613,6 +703,8 @@ export class CCurrencies {
                         // await UserService.CreateAds(ctx, user)
 
                         if (user.settings.crypto_currency) {
+
+                            // @ts-ignore
                             let message = `Отправьте сумму в рублях, на которую хотите приобрести ${user.settings.crypto_currency[0].text.toUpperCase()}`
                             await ctx.editMessageText(message)
                             ctx.wizard.selectStep(4)
@@ -677,59 +769,114 @@ export class AService {
             })
     }
 
-    static async get_ads(ctx: MyContext) {
-        await UserService.GetUserById(ctx).then(async (document) => {
-            if (document) {
-                if (document.ads) {
+    static async select_page(ctx) {
+        try {
+            if (ctx.updateType == 'callback_query') {
+                let callback_data = ctx.update['callback_query'].data
+                let split = callback_data.split(' ')
+    
+                if (split[0] == 'goto') {
+                    ctx.answerCbQuery()
+                    await this.get_ads(ctx, parseFloat(split[1]) + 1)
+                }
 
-                    let message = ``
-                    const keyboard: ExtraEditMessageText = {
-                        parse_mode: 'HTML',
-                        reply_markup: {
-                            inline_keyboard: [
-                                [
-                                    {
-                                        text: 'На главную',
-                                        callback_data: 'to_home'
-                                    }
-                                ]
-                            ]
+                if (callback_data == 'to_home') {
+                    await CustomerService.greeting(ctx)
+                }
+    
+            }
+        } catch (err) {
+            console.log(err)
+        }
+    }
+
+    static async get_ads(ctx: MyContext, active_page?: number) {
+        try {
+            await UserService.GetUserById(ctx).then(async (document) => {
+                if (document) {
+                    if (document.ads) {
+                        
+                        let message = `<b>Мои объявления\n</b>`
+                        if (active_page) {
+                            message += `<b>Страница: ${active_page}</b>\n\n`
+                        } else {
+                            message += `<b>Страница:</b> 1\n\n`
                         }
-                    }
-
-                    console.log(document.ads)
-
-                    const ads = await paginate(document.ads, 2, 1)
-                    console.log(ads)
-                    ads.forEach(async (element, index) => {
-
-                        if (element.crypto_currency[0]) {
-                            if (element.crypto_currency[0].callback_data) {
-                                // @ts-ignore
-                                message += `<b>_id <code>${element._id}</code></b>\n`
-                                message += `<b>Сумма: <code>${element.sum} ${element.crypto_currency[0].callback_data.toUpperCase()}</code></b>\n`
-                                message += `<b>Валюта для оплаты: </b>`
-
-                                element.currency.forEach(async (cur_element, index) => {
-                                    if (index == element.currency.length - 1) {
-                                        message += `<code>${cur_element.callback_data.toUpperCase()}</code>\n\n`
-                                    } else {
-                                        message += `<code>${cur_element.callback_data.toUpperCase()}</code>, `
-                                    }
-                                })
-
+    
+                        let keyboard: ExtraEditMessageText = {
+                            parse_mode: 'HTML',
+                            reply_markup: {
+                                inline_keyboard: []
                             }
                         }
-                    })
-
-                    try {
-                        await ctx.editMessageText(message, keyboard)
-                    } catch (err) {
-                        console.log(err)
+    
+                        let page_size = 3
+                        let page = 1
+                        let pages = document.ads.length / page_size
+                        console.log(document.ads)
+                        let ads
+    
+                        if (active_page) {
+                            ads = await paginate(document.ads, page_size, active_page)
+                        } else {
+                            ads = await paginate(document.ads, page_size, 1)
+                        }
+    
+                        console.log(ads)
+                        ads.forEach(async (element, index) => {
+    
+                            if (element.crypto_currency[0]) {
+                                if (element.crypto_currency[0].callback_data) {
+                                    // @ts-ignore
+                                    message += `<b>_id <code>${element._id}</code></b>\n`
+                                    message += `<b>Сумма: <code>${element.sum} ₽</code></b>\n`
+                                    message += `<b>Криптовалюта: ${element.crypto_currency[0].callback_data.toUpperCase()}</b>\n\n`
+    
+                                }
+                            }
+                        })
+    
+                        let temp: InlineKeyboardButton[] = []
+                        for (let i = 0; i < pages; i++) {
+                            if ((i % 3 == 0) && (i !== 0)) {
+                                temp.push({
+                                    text: `${i}`,
+                                    callback_data: `goto ${i}`
+                                })
+                                keyboard.reply_markup?.inline_keyboard.push(temp)
+                                temp = []
+                            }
+    
+                            else {
+                                temp.push({
+                                    text: `${i + 1}`,
+                                    callback_data: `goto ${i}`
+                                })
+    
+                                console.log(temp)
+                            }
+                        }
+    
+                        if (temp.length > 0) {
+                            keyboard.reply_markup?.inline_keyboard.push(temp)
+                        }
+    
+                        keyboard.reply_markup?.inline_keyboard.push([{
+                            text: 'На главную',
+                            callback_data: 'to_home'
+                        }])
+    
+                        try {
+                            await ctx.editMessageText(message, keyboard)
+                        } catch (err) {
+                            console.log(err)
+                        }
+                        // console.log(document.ads)
                     }
-                    // console.log(document.ads)
                 }
-            }
-        })
+            })
+        } catch (err) {
+            console.log(err)
+        }
     }
 }

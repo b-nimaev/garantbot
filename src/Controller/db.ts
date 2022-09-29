@@ -127,7 +127,25 @@ export async function run() {
 }
 
 export class UserService {
+    
+    static async DeleteAddress(ctx: MyContext, address: string) {
+        
+        try {
+            await UserModel.findOneAndUpdate({
+                id: ctx.from?.id
+            }, {
+                $pull: {
+                    "settings.crypto_address": address
+                }
+            }).then(async (res) => {
+                console.log(res)
+            })
+        } catch (err) {
+            console.log(err)
+        }
 
+    }
+    
     static async PreSaveAddress(ctx: MyContext, data: any) {
         try {
             await UserModel.findOneAndUpdate({

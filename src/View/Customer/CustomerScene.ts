@@ -7,7 +7,7 @@ import CurrencyService from "../../Controller/Services/Currecny.Services";
 import { MyContext } from "../../Model/Model";
 import ICurrency from "../../Model/Services.Currency.Model";
 import { greeting } from "./CustomerGreeting";
-import CustomerService, { CCurrencies, SumService } from "./CustomerServices";
+import CustomerService, { AService, CCurrencies, SumService } from "./CustomerServices";
 require("dotenv").config();
 
 async function SelectCryptoCurrency(ctx: MyContext) {
@@ -194,7 +194,11 @@ const customer = new Scenes.WizardScene(
     async (ctx) => await CCurrencies.handler(ctx),
     async (ctx) => await CustomerService.choosePaymentMethodHandler(ctx),
     async (ctx) => await CustomerService.check_wallet(ctx),
-    async (ctx) => await CustomerService.select_exists_wallet(ctx)
+    async (ctx) => await CustomerService.select_exists_wallet(ctx),
+    async (ctx) => {
+        ctx.editMessageText('Укажите сумму')
+    },
+    async (ctx) => await AService.select_page(ctx)
 )
 
 handler.action('create', async (ctx) => await CustomerService.main(ctx))
