@@ -11,6 +11,7 @@ import search from './View/Search/SearchScene';
 import chagneSearchParams from './View/ChangeSearchParams/ChangeSearchParamsScene';
 import CurrencyService from './Controller/Services/Currecny.Services';
 import { ContextService } from './Controller/Context';
+import { ObjectId } from 'mongodb';
 
 // SSL
 const fs = require('fs');
@@ -35,7 +36,6 @@ if (token === undefined) {
 
 
 // Init scenes & set secretPath for requires from bot
-
 const scenes = [home, seller, customer, search, chagneSearchParams]
 const bot = new Telegraf<MyContext>(token)
 bot.command('set_banks', async (ctx) => {
@@ -62,6 +62,11 @@ bot.command('set_payments', async (ctx) => {
     } catch (err) {
         await ctx.reply("Что-то не так")
     }
+})
+
+bot.command('find', async (ctx) => {
+    let id ='63354873bfd9635a1530e5c7'
+    await UserService.FindDoc(id)
 })
 
 export default bot

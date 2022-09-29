@@ -6,11 +6,10 @@ import CurrencyService, { CryptoCurrencyModel } from "../../Controller/Services/
 import { MyContext } from "../../Model/Model";
 import ICurrency from "../../Model/Services.Currency.Model";
 
-async function paginate(array, page_size, page_number) {
+export async function paginate(array, page_size, page_number) {
     // human-readable page numbers usually start with 1, so we reduce 1 in the first argument
     return array.slice((page_number - 1) * page_size, page_number * page_size);
 }
-
 export default class CustomerService {
     static async main(ctx: MyContext) {
         if (ctx.updateType == "callback_query") {
@@ -29,7 +28,7 @@ export default class CustomerService {
 
             if (callback_data == 'my_ads') {
                 ctx.wizard.selectStep(10)
-                await AService.get_ads(ctx)
+                await UserService.get_ads(ctx)
             }
 
             ctx.answerCbQuery()
@@ -628,7 +627,7 @@ export class SumService {
 
             if (data == 'my_ads') {
                 await ctx.wizard.selectStep(10)
-                await AService.get_ads(ctx)
+                await UserService.get_ads(ctx)
                 ctx.answerCbQuery('Мои объявления...')
             }
 
@@ -774,107 +773,17 @@ export class AService {
             if (ctx.updateType == 'callback_query') {
                 let callback_data = ctx.update['callback_query'].data
                 let split = callback_data.split(' ')
-    
+
                 if (split[0] == 'goto') {
                     ctx.answerCbQuery()
-                    await this.get_ads(ctx, parseFloat(split[1]) + 1)
+                    await UserService.get_ads(ctx, parseFloat(split[1]) + 1)
                 }
 
                 if (callback_data == 'to_home') {
                     await CustomerService.greeting(ctx)
                 }
-    
-            }
-        } catch (err) {
-            console.log(err)
-        }
-    }
 
-    static async get_ads(ctx: MyContext, active_page?: number) {
-        try {
-            await UserService.GetUserById(ctx).then(async (document) => {
-                if (document) {
-                    if (document.ads) {
-                        
-                        let message = `<b>Мои объявления\n</b>`
-                        if (active_page) {
-                            message += `<b>Страница: ${active_page}</b>\n\n`
-                        } else {
-                            message += `<b>Страница:</b> 1\n\n`
-                        }
-    
-                        let keyboard: ExtraEditMessageText = {
-                            parse_mode: 'HTML',
-                            reply_markup: {
-                                inline_keyboard: []
-                            }
-                        }
-    
-                        let page_size = 3
-                        let page = 1
-                        let pages = document.ads.length / page_size
-                        console.log(document.ads)
-                        let ads
-    
-                        if (active_page) {
-                            ads = await paginate(document.ads, page_size, active_page)
-                        } else {
-                            ads = await paginate(document.ads, page_size, 1)
-                        }
-    
-                        console.log(ads)
-                        ads.forEach(async (element, index) => {
-    
-                            if (element.crypto_currency[0]) {
-                                if (element.crypto_currency[0].callback_data) {
-                                    // @ts-ignore
-                                    message += `<b>_id <code>${element._id}</code></b>\n`
-                                    message += `<b>Сумма: <code>${element.sum} ₽</code></b>\n`
-                                    message += `<b>Криптовалюта: ${element.crypto_currency[0].callback_data.toUpperCase()}</b>\n\n`
-    
-                                }
-                            }
-                        })
-    
-                        let temp: InlineKeyboardButton[] = []
-                        for (let i = 0; i < pages; i++) {
-                            if ((i % 3 == 0) && (i !== 0)) {
-                                temp.push({
-                                    text: `${i}`,
-                                    callback_data: `goto ${i}`
-                                })
-                                keyboard.reply_markup?.inline_keyboard.push(temp)
-                                temp = []
-                            }
-    
-                            else {
-                                temp.push({
-                                    text: `${i + 1}`,
-                                    callback_data: `goto ${i}`
-                                })
-    
-                                console.log(temp)
-                            }
-                        }
-    
-                        if (temp.length > 0) {
-                            keyboard.reply_markup?.inline_keyboard.push(temp)
-                        }
-    
-                        keyboard.reply_markup?.inline_keyboard.push([{
-                            text: 'На главную',
-                            callback_data: 'to_home'
-                        }])
-    
-                        try {
-                            await ctx.editMessageText(message, keyboard)
-                        } catch (err) {
-                            console.log(err)
-                        }
-                        // console.log(document.ads)
-                    }
-                }
-            })
+            }
         } catch (err) {
             console.log(err)
         }
