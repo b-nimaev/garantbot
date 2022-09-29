@@ -1,7 +1,7 @@
 import { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
 import { ExtraEditMessageText } from "telegraf/typings/telegram-types";
 import { ContextService } from "../../Controller/Context";
-import { IUser, UserService } from "../../Controller/db";
+import { IUser, PaymentService, UserService } from "../../Controller/db";
 import CurrencyService, { CryptoCurrencyModel } from "../../Controller/Services/Currecny.Services";
 import { MyContext } from "../../Model/Model";
 import ICurrency from "../../Model/Services.Currency.Model";
@@ -35,17 +35,17 @@ export default class CustomerService {
         if (ctx.from) {
             await UserService.GetUserById(ctx)
                 .then(async (user) => {
-                    
+
                     if (user) {
-         
+
                         let date = await ContextService.GetFormattedTime(user.date.registered)
-    
+
                         let message = `Ваш ID: <code>${user.id}</code>\n`
-                            message += `Роль: <code>Покупатель</code>\n`
-                            // message += `Ваш e-mail: <code>${user.email}</code>\n`
-                            // message += `Дата регистрации: <code>${date}</code>\n\n`
-                            // message += `Чтобы начать работу, нажмите на кнопку ниже <b>Найти сделку</b>`
-            
+                        message += `Роль: <code>Покупатель</code>\n`
+                        // message += `Ваш e-mail: <code>${user.email}</code>\n`
+                        // message += `Дата регистрации: <code>${date}</code>\n\n`
+                        // message += `Чтобы начать работу, нажмите на кнопку ниже <b>Найти сделку</b>`
+
                         let buyerExtraKeyboard: ExtraEditMessageText = {
                             parse_mode: 'HTML',
                             reply_markup: {
@@ -65,15 +65,15 @@ export default class CustomerService {
                                 ]
                             }
                         }
-            
+
                         ctx.wizard.selectStep(1)
                         ctx.update['callback_query'] ? ctx.answerCbQuery() : true;
                         ctx.update['callback_query'] ? await ctx.editMessageText(message, buyerExtraKeyboard) : await ctx.reply(message, buyerExtraKeyboard)
                     }
-    
+
                 })
-    
-        }   
+
+        }
     }
 
     static async UserBanksRender(ctx: MyContext) {
@@ -113,6 +113,7 @@ export default class CustomerService {
                 let query = ctx.update['callback_query']
 
                 if (query.data == 'continue') {
+                    ctx.wizard.selectStep(6)
                     return await this.choosePaymentMethod(ctx)
                     // return await CCurrencies.render(ctx)
                 }
@@ -152,17 +153,221 @@ export default class CustomerService {
 
     static async choosePaymentMethod(ctx: MyContext) {
 
-        let message = `Выберите способ оплаты`
-        let extra: ExtraEditMessageText = {
-            parse_mode: 'HTML',
-            reply_markup: {
-                inline_keyboard: []
+        try {
+            let methods = await PaymentService.GetPaymentMethods()
+
+            if (methods) {
+                if (methods.length !== 0) {
+                    let message = `Выберите способ оплаты`
+                    let extra: ExtraEditMessageText = {
+                        parse_mode: 'HTML',
+                        reply_markup: {
+                            inline_keyboard: []
+                        }
+                    }
+    
+                    let user = await UserService.GetUserById(ctx)
+                    let buttons: InlineKeyboardButton[] = []
+                    methods.forEach(async (method) => {
+                        if (user) {
+                            let user_methods = user?.settings.payment_method
+                            
+                            if (user_methods) {
+                                if (user_methods.length > 0) {
+                                    user_methods.forEach(async (user_method) => {
+                                        let temp = user_method.text + ' (удалить)'
+    
+                                        if ((method.callback_data === user_method.callback_data)) {
+                                            method.text += ' (удалить)'
+                                            method.callback_data = 'remove_method ' + method.callback_data
+                                        }
+    
+                                        
+                                    })
+                                }
+                            }
+                            
+                            extra.reply_markup?.inline_keyboard.push([method])
+    
+                        }
+                    })
+
+                    if (user) {
+                        if (user.settings) {
+                            if (user.settings.payment_method) {
+                                if (user.settings.payment_method.length > 0) {
+                                    extra.reply_markup?.inline_keyboard.push([
+                                        {
+                                            text: 'Продолжить',
+                                            callback_data: 'continue'
+                                        }
+                                    ])
+                                }
+                            }
+                        }
+                    }
+    
+                    return await ctx.editMessageText(message, extra)
+                } else {
+                    await ctx.reply('Нет доступных способов оплаты! \nОтправьте команду /set_payments')
+                }
+            }
+        } catch (err) {
+            console.log(err)
+        }
+
+    }
+
+    static async choosePaymentMethodHandler(ctx: MyContext) {
+        if (ctx.updateType == 'callback_query') {
+            let callback_data = ctx.update["callback_query"].data
+
+            if (callback_data == 'continue') {
+                return this.crypto_wallets(ctx)
+                
+            }
+
+            let splitted = callback_data.split(' ')
+            let methods = await PaymentService.GetPaymentMethods()
+
+            if (splitted[0] == 'remove_method') {
+                methods.forEach(async (method) => {
+                    if (method.callback_data == splitted[1]) {
+                        await PaymentService.DeleteMethod(ctx, method)
+                        return await this.choosePaymentMethod(ctx)
+                    }
+                })
+            } else {
+                methods.forEach(async (method) => {
+                    if (method.callback_data == callback_data) {
+                        await PaymentService.SaveMethod(ctx, method)
+                        return await this.choosePaymentMethod(ctx)
+                    }
+                })
             }
         }
-        
-        
+    }
 
-        await ctx.editMessageText(message, extra)
+    // Криптокошельки
+    static async crypto_wallets(ctx: MyContext) {
+        try {
+            let user = await UserService.GetUserById(ctx)
+
+            if (!user?.settings.crypto_address?.length) {
+                let message = `Отправьте адрес криптокошелька`
+                ctx.wizard.selectStep(7)
+                await ctx.editMessageText(message)
+            } else {
+                let message = `Выберите адрес криптокошелька`
+                let extra: ExtraEditMessageText = {
+                    parse_mode: 'HTML',
+                    reply_markup: {
+                        inline_keyboard: []
+                    }
+                }
+
+                user.settings.crypto_address.forEach(async (element, index) => {
+                    message += `\n${index+1}. <code>${element}</code>`
+                    extra.reply_markup?.inline_keyboard.push([{
+                        text: `${index + 1}`,
+                        callback_data: `select_wallet ` + index
+                    }])
+                })
+
+                extra.reply_markup?.inline_keyboard.push([{
+                    text: 'Указать новый кошелёк',
+                    callback_data: 'new_wallet'
+                }])
+
+                ctx.wizard.selectStep(8)
+                await ctx.editMessageText(message, extra)
+            }
+
+        } catch (err) {
+            console.log(err)
+        }
+    }
+
+    static async select_exists_wallet(ctx: MyContext) {
+        try {
+            if (ctx.updateType == 'callback_query') {
+                let callback_data = ctx.update["callback_query"].data
+
+                if (callback_data == 'new_wallet') {
+                    let message = `Отправьте адрес криптокошелька`
+                    ctx.wizard.selectStep(7)
+                    await ctx.editMessageText(message)
+                }
+
+                let split = callback_data.split(' ')
+                if (split[0] == 'select_wallet') {
+                    let index = split[1]
+
+                    let user = await UserService.GetUserById(ctx)
+                    if (user) {
+                        if (user.settings.crypto_address?.length) {
+                            user.settings.crypto_address.forEach(async (element, db_index) => {
+                                if (index == db_index) {
+                                    return await ctx.editMessageText(`${element}  выбран!`)
+                                }
+                            })
+                        }
+                    }
+
+                }
+
+            }
+        } catch (err) {
+            console.log(err)
+        }
+    }
+
+    static async check_wallet(ctx: MyContext) {
+        if (ctx.updateType == 'message') {
+            let wallet = ctx.update["message"].text
+            await UserService.PreSaveAddress(ctx, wallet)
+            const extra: ExtraEditMessageText = {
+                parse_mode: 'HTML',
+                reply_markup: {
+                    inline_keyboard: [
+                        [
+                            {
+                                text: 'Правильно',
+                                callback_data: 'continue'
+                            }
+                        ],
+                        [
+                            {
+                                text: 'Назад',
+                                callback_data: 'back'
+                            }
+                        ]
+                    ]
+                }
+            }
+
+            await ctx.reply(`Проверьте на правильность ввода адреса: <b>${wallet}</b>`, extra)
+        }
+
+        if (ctx.updateType == 'callback_query') {
+            let data = ctx.update["callback_query"].data
+            
+            if (data == 'continue') {
+                let user = await UserService.GetUserById(ctx)
+
+                if (user) {
+                    // if (user.settings.)
+                }
+
+                await UserService.SaveCryptoAddress(ctx)
+                ctx.answerCbQuery('Кошелёк сохранён!')
+            }
+
+            if (data == 'back') {
+                await this.crypto_wallets(ctx)
+            }
+
+        }
     }
 
     static async rerenderAfterSelectBank(ctx: MyContext) {
@@ -381,6 +586,11 @@ export class CCurrencies {
     static async handler(ctx: MyContext) {
         if (ctx.updateType == 'callback_query') {
             let data = ctx.update["callback_query"].data
+
+            if (data == 'continue') {
+                return ctx.editMessageText('Выборк кошелька')
+            }
+
             let arr = await this.GC(ctx)
             arr.forEach(async (currency) => {
                 if (currency.element.callback_data == data) {

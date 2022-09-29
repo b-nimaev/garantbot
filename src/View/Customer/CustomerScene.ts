@@ -192,9 +192,9 @@ const customer = new Scenes.WizardScene(
     async (ctx) => selectCurrency(ctx),
     async (ctx) => await SumService.checkSum(ctx),
     async (ctx) => await CCurrencies.handler(ctx),
-    async (ctx) => {
-        console.log('Тип оплаты')
-    }
+    async (ctx) => await CustomerService.choosePaymentMethodHandler(ctx),
+    async (ctx) => await CustomerService.check_wallet(ctx),
+    async (ctx) => await CustomerService.select_exists_wallet(ctx)
 )
 
 handler.action('create', async (ctx) => await CustomerService.main(ctx))

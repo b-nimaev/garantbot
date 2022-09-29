@@ -17,11 +17,6 @@ export interface payment_method {
     callback_data: string
 }
 
-export interface crypto_address {
-    text: string,
-    callback_data: string
-}
-
 // 1. Create an interface representing a document in MongoDB.
 export interface IUser extends User {
     name: string | undefined;
@@ -40,8 +35,9 @@ export interface IUser extends User {
         currency: { text: string, callback_data: string }[],
         crypto_currency?: { text: string, callback_data: string }[],
         payment_method?: payment_method[],
-        crypto_address?: crypto_address[],
+        crypto_address?: [string],
         pre_sum: number,
+        pre_save?: string | number
     },
     ads?: {
         banks: { text: string, callback_data: string }[],
@@ -97,15 +93,13 @@ const userSchema = new Schema<IUser>({
         banks: [Object],
         currency: [Object],
         crypto_currency: [{ text: String, callback_data: String }],
-        crypto_address: [{
-            text: String,
-            callback_data: String
-        }] || undefined || null,
+        crypto_address: [String] || undefined || null,
         payment_method: [{
             text: String,
             callback_data: String
         }] || undefined || null,
         pre_sum: Number,
+        pre_save: String || Number || undefined || null
     },
     ads: [adsSchema],
     settings_buyer: {
@@ -133,6 +127,38 @@ export async function run() {
 }
 
 export class UserService {
+
+    static async PreSaveAddress(ctx: MyContext, data: any) {
+        try {
+            await UserModel.findOneAndUpdate({
+                id: ctx.from?.id
+            }, {
+                $set: {
+                    "settings.pre_save": data
+                }
+            })
+        } catch (err) {
+            console.log(err)
+        }
+    }
+
+    static async SaveCryptoAddress(ctx: MyContext) {
+        try {
+            let user = await UserModel.findOne({
+                id: ctx.from?.id
+            })
+
+            await UserModel.findOneAndUpdate({
+                id: ctx.from?.id
+            }, {
+                $addToSet: {
+                    "settings.crypto_address": user?.settings.pre_save
+                }
+            })
+        } catch (err) {
+            console.log(err)
+        }
+    }
 
     static async SaveSum(ctx: MyContext, sum: number) {
         try {
@@ -467,6 +493,35 @@ export class PaymentService {
                 await ctx.reply('Способы оплаты существуют в базе данных!')
             }
         }
+    }
+
+    static async SaveMethod(ctx: MyContext, method: payment_method) {
+        await UserModel.findOneAndUpdate({
+            id: ctx.from?.id
+        }, {
+            $addToSet: {
+                "settings.payment_method": method
+            }
+        })
+
+    }
+
+    static async DeleteMethod(ctx: MyContext, method: payment_method) {
+        
+        try {
+            await UserModel.findOneAndUpdate({
+                id: ctx.from?.id
+            }, {
+                $pull: {
+                    "settings.payment_method": {
+                        "callback_data": method.callback_data
+                    }
+                }
+            })
+        } catch (err) {
+            console.log(err)
+        }
+
     }
 
     static async GetPaymentMethods() {
