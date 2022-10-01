@@ -5,6 +5,7 @@ import { InlineKeyboardButton, User } from 'telegraf/typings/core/types/typegram
 import { ExtraEditMessageText } from 'telegraf/typings/telegram-types';
 import { MyContext } from '../Model/Model';
 import ICurrency from '../Model/Services.Currency.Model';
+import CustomerService from '../View/Customer/CustomerServices';
 require("dotenv").config();
 const autoIncrement = require('mongoose-auto-increment');
 let uri = <string>process.env.dbcon;
@@ -56,6 +57,10 @@ export interface IUser extends User {
     settings_buyer: {
         banks: { text: string, callback_data: string }[],
         currency: { text: string, callback_data: string }[],
+    },
+    middleware?: {
+        opened_ads?: ObjectId,
+        opened_page?: number
     }
 }
 
@@ -145,6 +150,16 @@ const userSchema = new Schema<IUser>({
     settings_buyer: {
         banks: [Object],
         currency: [Object]
+    },
+    middleware: {
+        opened_ads: {
+            type: ObjectId,
+            required: false
+        },
+        opened_page: {
+            type: Number,
+            required: false
+        }
     }
 }, { timestamps: true });
 
@@ -154,9 +169,9 @@ const bankSchema = new Schema<IBank>({
 })
 
 // 3. Create a Model.
-const UserModel = model<IUser>('User', userSchema);
+export const UserModel = model<IUser>('User', userSchema);
 const BankModel = model<IBank>('Bank', bankSchema);
-const ADSModel = model<IAds>('ads', adsSchema);
+export const ADSModel = model<IAds>('ads', adsSchema);
 const PayModel = model<payment_method>('payment_method', paySchema)
 run().catch(err => console.log(err));
 
@@ -264,6 +279,11 @@ export class UserService {
                     // console.log(document.ads)
 
                 } else {
+
+                    if (ctx.update["callback_query"].data == 'delete') {
+                        return await CustomerService.greeting(ctx)
+                    }
+
                     ctx.answerCbQuery("Объявлений не найдено!")
                     ctx.wizard.selectStep(1)
                 }
@@ -372,26 +392,6 @@ export class UserService {
                 return res
             })
 
-            /*
-            return await UserModel.findOne({
-                id: ctx.from?.id
-            }).then(async (document) => {
-                if (document) {
-                    if (document.ads) {
-                        let result = document?.ads[document.ads.length - 1]
-                        let newitem: any = result
-                        newitem.user_id = document.id
-
-                        await ADSModel.insertMany([newitem]).then(result => {
-                            console.log(result)
-                        })
-
-                        return result
-                    }
-                }
-            })
-
-            */
         } catch (error) {
             console.log(error)
             return error
@@ -400,7 +400,7 @@ export class UserService {
 
     static async GetCreatedADS(id: ObjectId) {
         try {
-            await ADSModel.findOne({
+            return await ADSModel.findOne({
                 _id: id
             }).then((doc) => { return doc }).catch(() => { return false })
         } catch (err) {

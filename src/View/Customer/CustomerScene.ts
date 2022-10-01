@@ -198,7 +198,8 @@ const customer = new Scenes.WizardScene(
     async (ctx) => {
         ctx.editMessageText('Укажите сумму')
     },
-    async (ctx) => await AService.select_page(ctx)
+    async (ctx) => await AService.select_page(ctx),
+    async (ctx) => await AService.single_ads(ctx)
 )
 
 handler.action('create', async (ctx) => await CustomerService.main(ctx))

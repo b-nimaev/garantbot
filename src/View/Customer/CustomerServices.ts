@@ -3,7 +3,7 @@ import { callback } from "telegraf/typings/button";
 import { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
 import { ExtraEditMessageText } from "telegraf/typings/telegram-types";
 import { ContextService } from "../../Controller/Context";
-import { IUser, PaymentService, UserService } from "../../Controller/db";
+import { ADSModel, IUser, PaymentService, UserModel, UserService } from "../../Controller/db";
 import CurrencyService, { CryptoCurrencyModel } from "../../Controller/Services/Currecny.Services";
 import { MyContext } from "../../Model/Model";
 import ICurrency from "../../Model/Services.Currency.Model";
@@ -777,6 +777,99 @@ export class CCurrencies {
 }
 
 export class AService {
+
+    static async single_ads(ctx: MyContext) {
+
+        if (ctx.updateType == 'callback_query') {
+            let callback_data = ctx.update["callback_query"].data
+            
+            // Удаление объявления
+            if (callback_data == 'delete') {
+                // ctx.wizard.selectStep(10)
+                // await UserService.get_ads(ctx)
+                
+                let user = await UserService.GetUserById(ctx)
+                if (user?.middleware?.opened_ads) {
+                    await this.delete_ads(ctx, user?.middleware?.opened_ads)
+                    await this.unset_ads_id(ctx)
+                }
+                ctx.wizard.selectStep(10)
+                await UserService.get_ads(ctx)
+            }
+
+
+            if (callback_data == 'back') {
+                ctx.wizard.selectStep(10)
+                await UserService.get_ads(ctx)
+            }
+
+        }
+
+    }
+
+    static async render_single_ads(ctx: MyContext, data: any) {
+        ctx.wizard.selectStep(11)
+        let message = `Объявление ${data._id}\n\n`
+        message += `Количество откликов: ${data.responses.length}\n`
+        message += `Cумма: ${data.sum}\n`
+        message += `Дата публикации: ${data.date}\n`
+        message += `Способы оплаты: `
+        data.payment_method.forEach(async (user_payment_method, index) => {
+            if (data.payment_method.length == index + 1) {
+                message += `${user_payment_method.text}`
+            } else {
+                message += `${user_payment_method.text}, `
+            }
+        })
+
+        message += `Банки и платежные системы: `
+        data.banks.forEach(async (user_payment_method, index) => {
+            if (data.banks.length == index + 1) {
+                message += `${user_payment_method.text}`
+            } else {
+                message += `${user_payment_method.text}, `
+            }
+        })
+
+        let extra: ExtraEditMessageText = {
+            parse_mode: 'HTML',
+            reply_markup: {
+                inline_keyboard: [
+                    [
+                        {
+                            text: 'Просмотреть отлики',
+                            callback_data: 'see_responses'
+                        }
+                    ],
+                    [
+                        {
+                            text: 'Удалить объявление',
+                            callback_data: 'delete'
+                        }
+                    ],
+                    [
+                        {
+                            text: 'Назад',
+                            callback_data: 'back'
+                        }
+                    ]
+                ]
+            }
+        }
+
+        try {
+            if (ctx.updateType == 'message') {
+                await ctx.reply(message, extra)
+            }
+
+            if (ctx.updateType == 'callback_query') {
+                await ctx.editMessageText(message, extra)
+            }
+        } catch (err) {
+            console.log(err)
+        }
+    }
+
     static async render(ctx: MyContext) {
         return await UserService.GetUserById(ctx)
             .then(async (document) => {
@@ -790,7 +883,7 @@ export class AService {
                             // @ts-ignore
                             message += `<b>Криптовалюта: ${created_document.crypto_currency[0].text.toUpperCase()}</b>`
                             message += `\n<b>Идентификатор: </b><code>${created_document._id}</code>`
-        
+
                             const keyboard: ExtraEditMessageText = {
                                 parse_mode: 'HTML',
                                 reply_markup: {
@@ -808,7 +901,7 @@ export class AService {
                                     ]
                                 }
                             }
-        
+
                             // @ts-ignore
                             await ctx.editMessageText(message, keyboard)
                             await ctx.answerCbQuery("Объявление сохранено")
@@ -816,7 +909,7 @@ export class AService {
                             await ctx.answerCbQuery('Повторите попытку')
                         }
                     })
-                    
+
 
                 }
             })
@@ -841,23 +934,64 @@ export class AService {
             }
 
             if (ctx.updateType == 'message') {
-                
+
                 let message = ctx.update["message"].text
-                await UserService.GetCreatedADS(new ObjectId(message)).then(async (result) => {
-                    if (result) {
-                        console.log(result)
-                    } else {
+                await UserService.GetCreatedADS(new ObjectId(message))
+                    .then(async (result) => {
+                        if (result) {
+                            console.log('123')
+                            await this.save_ads_id(ctx, new ObjectId(message))
+                            await this.render_single_ads(ctx, result)
+                        } else {
+                            await UserService.get_ads(ctx)
+                        }
+                    }).catch(async (err) => {
                         await UserService.get_ads(ctx)
-                    }
-                }).catch(async (err) => {
-                    await UserService.get_ads(ctx)
-                })
+                    })
 
             }
 
 
         } catch (err) {
             await UserService.get_ads(ctx)
+        }
+    }
+
+    static async save_ads_id(ctx: MyContext, id: ObjectId) {
+        try {
+            await UserModel.findOneAndUpdate({
+                id: ctx.from?.id
+            }, {
+                $set: {
+                    "middleware.opened_ads": id
+                }
+            })
+        } catch (err) {
+            console.log(err)
+        }
+    }
+
+    static async unset_ads_id(ctx: MyContext) {
+        try {
+            await UserModel.findOneAndUpdate({
+                id: ctx.from?.id
+            }, {
+                $unset: {
+                    "middleware.opened_ads": ""
+                }
+            })
+        } catch (err) {
+            console.log(err)
+        }
+    }
+
+    static async delete_ads(ctx: MyContext, id: ObjectId) {
+        try {
+            await ADSModel.findOneAndDelete({
+                _id: id
+            })
+        } catch (err) {
+            console.log(err)
         }
     }
 }
