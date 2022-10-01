@@ -1,3 +1,5 @@
+import { ObjectId } from "mongodb";
+import { callback } from "telegraf/typings/button";
 import { InlineKeyboardButton } from "telegraf/typings/core/types/typegram";
 import { ExtraEditMessageText } from "telegraf/typings/telegram-types";
 import { ContextService } from "../../Controller/Context";
@@ -29,6 +31,11 @@ export default class CustomerService {
             if (callback_data == 'my_ads') {
                 ctx.wizard.selectStep(10)
                 await UserService.get_ads(ctx)
+            }
+
+            if (callback_data == 'to_home') {
+                await this.greeting(ctx)
+                // await UserService.get_ads(ctx)
             }
 
             ctx.answerCbQuery()
@@ -122,6 +129,10 @@ export default class CustomerService {
                     // return await CCurrencies.render(ctx)
                 }
 
+                if (query.data == 'back') {
+                    return await this.greeting(ctx)
+                }
+
                 let data = query.data.split(' ')
                 let banks: { text: string, callback_data: string }[] = await UserService.GetBanks()
                 console.log(data)
@@ -205,6 +216,11 @@ export default class CustomerService {
                                             text: 'Продолжить',
                                             callback_data: 'continue'
                                         }
+                                    ], [
+                                        {
+                                            text: 'Назад',
+                                            callback_data: 'select_bank'
+                                        }
                                     ])
                                 }
                             }
@@ -228,7 +244,11 @@ export default class CustomerService {
 
             if (callback_data == 'continue') {
                 return this.crypto_wallets(ctx)
+            }
 
+            if (callback_data == 'select_bank') {
+                ctx.wizard.selectStep(1)
+                return this.UserBanksRender(ctx)
             }
 
             let splitted = callback_data.split(' ')
@@ -259,11 +279,24 @@ export default class CustomerService {
 
             if (!user?.settings.crypto_address?.length) {
                 let message = `Отправьте адрес криптокошелька`
+                let extra: ExtraEditMessageText = {
+                    parse_mode: 'HTML',
+                    reply_markup: {
+                        inline_keyboard: [
+                            [
+                                {
+                                    text: 'Назад',
+                                    callback_data: 'banks'
+                                }
+                            ]
+                        ]
+                    }
+                }
                 ctx.wizard.selectStep(7)
                 if (ctx.updateType == 'callback_query') {
-                    await ctx.editMessageText(message)
+                    await ctx.editMessageText(message, extra)
                 } else {
-                    await ctx.reply(message)
+                    await ctx.reply(message, extra)
                 }
             } else {
                 let message = `Выберите адрес криптокошелька`
@@ -337,6 +370,7 @@ export default class CustomerService {
                     // ctx.reply(`${data[1]} удалён`)
                     await UserService.DeleteAddress(ctx, data[1]).then(async (result) => {
                         console.log(result)
+                        await this.crypto_wallets(ctx)
                     })
 
                 }
@@ -445,6 +479,11 @@ export default class CustomerService {
                 await this.crypto_wallets(ctx)
             }
 
+            if (data == 'banks') {
+                ctx.wizard.selectStep(6)
+                await this.choosePaymentMethod(ctx)
+            }
+
         }
     }
 
@@ -543,6 +582,13 @@ export default class CustomerService {
                     ])
                 }
 
+                searchDealKeyboard.reply_markup?.inline_keyboard.push([
+                    {
+                        text: 'Назад',
+                        callback_data: 'back'
+                    }
+                ])
+
                 return searchDealKeyboard
             } else {
                 return ctx.scene.enter('home')
@@ -631,7 +677,7 @@ export class SumService {
                 ctx.answerCbQuery('Мои объявления...')
             }
 
-            if (data == 'back') {
+            if (data == 'back' || data == 'to_home') {
                 console.log('to home')
                 await CustomerService.greeting(ctx)
             }
@@ -735,13 +781,16 @@ export class AService {
         return await UserService.GetUserById(ctx)
             .then(async (document) => {
                 if (document) {
-                    await UserService.CreateAds(ctx, document)
-                        .then(async (created_document) => {
+                    let result = await UserService.CreateAds(ctx, document)
+                    let item = result[0]
+                    await UserService.GetCreatedADS(new ObjectId(item._id)).then(async (created_document: any) => {
+                        if (created_document) {
                             let message = `<b>Объявление опубликовано!</b>\n`
                             message += `<b>Объём сделки: ${created_document.sum} ₽</b>\n`
+                            // @ts-ignore
                             message += `<b>Криптовалюта: ${created_document.crypto_currency[0].text.toUpperCase()}</b>`
                             message += `\n<b>Идентификатор: </b><code>${created_document._id}</code>`
-
+        
                             const keyboard: ExtraEditMessageText = {
                                 parse_mode: 'HTML',
                                 reply_markup: {
@@ -759,16 +808,21 @@ export class AService {
                                     ]
                                 }
                             }
-
+        
                             // @ts-ignore
                             await ctx.editMessageText(message, keyboard)
                             await ctx.answerCbQuery("Объявление сохранено")
-                        })
+                        } else {
+                            await ctx.answerCbQuery('Повторите попытку')
+                        }
+                    })
+                    
+
                 }
             })
     }
 
-    static async select_page(ctx) {
+    static async select_page(ctx: MyContext) {
         try {
             if (ctx.updateType == 'callback_query') {
                 let callback_data = ctx.update['callback_query'].data
@@ -780,12 +834,30 @@ export class AService {
                 }
 
                 if (callback_data == 'to_home') {
+                    // await ctx.deleteMessage(ctx.update["callback_query"].message.message_id - 1)
                     await CustomerService.greeting(ctx)
                 }
 
             }
+
+            if (ctx.updateType == 'message') {
+                
+                let message = ctx.update["message"].text
+                await UserService.GetCreatedADS(new ObjectId(message)).then(async (result) => {
+                    if (result) {
+                        console.log(result)
+                    } else {
+                        await UserService.get_ads(ctx)
+                    }
+                }).catch(async (err) => {
+                    await UserService.get_ads(ctx)
+                })
+
+            }
+
+
         } catch (err) {
-            console.log(err)
+            await UserService.get_ads(ctx)
         }
     }
 }

@@ -59,17 +59,23 @@ export interface IUser extends User {
     }
 }
 
+interface response {
+    user: User,
+    date: number,
+    garantex_id?: number,
+    garantex_link?: string
+}
+
 interface IAds {
     banks: IBank[],
     currency: ICurrency[],
     crypto_currency: ICurrency[],
-    amount: number,
+    amount?: number,
     sum: number,
     date: number,
     payment_method: payment_method[],
-    _id: false,
     user_id: number,
-    id: string
+    responses?: response[]
 }
 
 interface newitem extends IAds {
@@ -93,8 +99,21 @@ const adsSchema = new Schema<IAds>({
         callback_data: String
     }],
     user_id: Number,
-    _id: false,
-    id: String
+    responses: [{
+        user: {
+            id: Number,
+            name: String,
+            email: String,
+            avatar: String,
+            is_bot: Boolean,
+            role: String,
+            first_name: String,
+        },
+        date: Number,
+        garantex_id: { type: Number, required: false },
+        garantex_link: { type: String, required: false },
+        required: false
+    }]
 })
 
 // 2. Create a Schema corresponding to the document interface.
@@ -197,24 +216,28 @@ export class UserService {
                         }
                     })
 
+                    message += `📝 Отправьте _id объявлеиня для редактирования`
+
                     let temp: InlineKeyboardButton[] = []
-                    for (let i = 0; i < pages; i++) {
-                        if ((i % 3 == 0) && (i !== 0)) {
-                            temp.push({
-                                text: `${i}`,
-                                callback_data: `goto ${i}`
-                            })
-                            keyboard.reply_markup?.inline_keyboard.push(temp)
-                            temp = []
-                        }
-
-                        else {
-                            temp.push({
-                                text: `${i + 1}`,
-                                callback_data: `goto ${i}`
-                            })
-
-                            console.log(temp)
+                    if (pages > 1) {
+                        for (let i = 0; i < pages; i++) {
+                            if ((i % 3 == 0) && (i !== 0)) {
+                                temp.push({
+                                    text: `${i}`,
+                                    callback_data: `goto ${i}`
+                                })
+                                keyboard.reply_markup?.inline_keyboard.push(temp)
+                                temp = []
+                            }
+    
+                            else {
+                                temp.push({
+                                    text: `${i + 1}`,
+                                    callback_data: `goto ${i}`
+                                })
+    
+                                console.log(temp)
+                            }
                         }
                     }
 
@@ -228,12 +251,21 @@ export class UserService {
                     }])
 
                     try {
-                        await ctx.editMessageText(message, keyboard)
+                        if (ctx.updateType == 'callback_query') {
+                            await ctx.editMessageText(message, keyboard)
+                        }
+                        
+                        if (ctx.updateType == 'message') {
+                            await ctx.reply(message, keyboard)
+                        }
                     } catch (err) {
                         console.log(err)
                     }
                     // console.log(document.ads)
 
+                } else {
+                    ctx.answerCbQuery("Объявлений не найдено!")
+                    ctx.wizard.selectStep(1)
                 }
             }
 
@@ -321,28 +353,26 @@ export class UserService {
         }
     }
 
-    static async CreateAds(ctx: MyContext, user: IUser) {
+    static async CreateAds(ctx: MyContext, user: any) {
         try {
 
-            let item: any = {
+            let item: IAds = {
                 banks: user.settings.banks,
                 currency: user.settings.currency,
                 crypto_currency: user.settings.crypto_currency,
                 payment_method: user.settings.payment_method,
                 sum: user.settings.pre_sum,
-                date: Date.now()
+                date: Date.now(),
+                user_id:  user.id,
+                responses: []
             }
 
-            await UserModel.findOneAndUpdate({
-                id: ctx.from?.id
-            }, {
-                $addToSet: {
-                    "ads": item
-                }
+            return await ADSModel.insertMany([item]).then((res) => {
+                console.log(res)
+                return res
             })
 
-
-
+            /*
             return await UserModel.findOne({
                 id: ctx.from?.id
             }).then(async (document) => {
@@ -350,16 +380,31 @@ export class UserService {
                     if (document.ads) {
                         let result = document?.ads[document.ads.length - 1]
                         let newitem: any = result
-                        newitem.user_id = document.id,
-                            await ADSModel.insertMany([newitem])
+                        newitem.user_id = document.id
+
+                        await ADSModel.insertMany([newitem]).then(result => {
+                            console.log(result)
+                        })
 
                         return result
                     }
                 }
             })
+
+            */
         } catch (error) {
             console.log(error)
             return error
+        }
+    }
+
+    static async GetCreatedADS(id: ObjectId) {
+        try {
+            await ADSModel.findOne({
+                _id: id
+            }).then((doc) => { return doc }).catch(() => { return false })
+        } catch (err) {
+            return false
         }
     }
 
