@@ -1,25 +1,24 @@
 import { Composer, Scenes } from "telegraf";
-import { ExtraEditMessageText } from "telegraf/typings/telegram-types";
-import { UserService } from "../../Controller/db";
-import CurrencyService from "../../Controller/Services/Currecny.Services";
-// import * as EmailValidator from 'email-validator';
 import { MyContext } from "../../Model/Model";
-import ICurrency from "../../Model/Services.Currency.Model";
-import { greeting } from "./SellerGreeting";
+import SellerService from "./SellerService";
 require("dotenv").config();
 
 
 const handler = new Composer<MyContext>(); // function
 const seller = new Scenes.WizardScene(
     "seller",
-    handler
+    handler,
+    async (ctx) => await SellerService.handler(ctx),
+    async (ctx) => await SellerService.single_ads_handler(ctx)
 )
 
 handler.action("search_deal", async (ctx) => {
-    ctx.answerCbQuery()
+    await SellerService.get_ads(ctx)
+    ctx.wizard.next()
+    ctx.answerCbQuery('Список объявлений получен!')
 })
 
 seller.leave(async (ctx) => console.log("seller scene leave"))
-seller.enter(async (ctx) => await greeting(ctx))
+seller.enter(async (ctx) => await SellerService.greeting(ctx))
 seller.start(async (ctx) => ctx.scene.enter("home"))
 export default seller

@@ -783,6 +783,27 @@ export class AService {
         if (ctx.updateType == 'callback_query') {
             let callback_data = ctx.update["callback_query"].data
             
+            if (callback_data == 'see_responses') {
+                
+                let user = await UserService.GetUserById(ctx)
+                if (user?.middleware?.opened_ads) {
+
+                    let ads = await this.get_created_ads(user?.middleware?.opened_ads)
+                    
+                    if (ads) {
+                        // @ts-ignore
+                        if (ads.responses.length == 0) {
+                            ctx.answerCbQuery("Отликов нет!")
+                        }
+                    }
+                
+                    // await this.delete_ads(ctx, user?.middleware?.opened_ads)
+                    // await this.unset_ads_id(ctx)
+                    
+                }
+
+            }
+
             // Удаление объявления
             if (callback_data == 'delete') {
                 // ctx.wizard.selectStep(10)
@@ -816,7 +837,7 @@ export class AService {
         message += `Способы оплаты: `
         data.payment_method.forEach(async (user_payment_method, index) => {
             if (data.payment_method.length == index + 1) {
-                message += `${user_payment_method.text}`
+                message += `${user_payment_method.text}\n`
             } else {
                 message += `${user_payment_method.text}, `
             }
@@ -992,6 +1013,16 @@ export class AService {
             })
         } catch (err) {
             console.log(err)
+        }
+    }
+
+    static async get_created_ads(id: ObjectId) {
+        try {
+            return await ADSModel.findOne({
+                _id: id
+            }).then((doc) => { return doc }).catch(() => { return false })
+        } catch (err) {
+            return false
         }
     }
 }
