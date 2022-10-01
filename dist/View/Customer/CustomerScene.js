@@ -36,322 +36,325 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
     }
 };
 exports.__esModule = true;
-exports.renderSearchD = void 0;
+exports.renderSelectCurrency = void 0;
 var telegraf_1 = require("telegraf");
-var __1 = require("../..");
-var Context_1 = require("../../Controller/Context");
 var db_1 = require("../../Controller/db");
+var Currecny_Services_1 = require("../../Controller/Services/Currecny.Services");
 var CustomerGreeting_1 = require("./CustomerGreeting");
+var CustomerServices_1 = require("./CustomerServices");
 require("dotenv").config();
-function selectCurrency(ctx) {
+function SelectCryptoCurrency(ctx) {
     return __awaiter(this, void 0, void 0, function () {
-        var query, data;
-        var _this = this;
+        var crypto_currency, user, message, renderSelectCurrencyKeyboard, temp_1;
         return __generator(this, function (_a) {
             switch (_a.label) {
-                case 0:
-                    query = ctx.update['callback_query'];
-                    data = query.data;
-                    if (!query) return [3 /*break*/, 3];
-                    if (!(data == 'reset')) return [3 /*break*/, 2];
-                    return [4 /*yield*/, db_1.UserService.ResetSettings(ctx)
-                            .then(function (success) { return ctx.answerCbQuery('Настройки сброшены'); })["catch"](function (error) { console.log(error); return false; })];
-                case 1: return [2 /*return*/, _a.sent()];
+                case 0: return [4 /*yield*/, Currecny_Services_1["default"].GetCryptoCurrenciesArray()];
+                case 1:
+                    crypto_currency = _a.sent();
+                    return [4 /*yield*/, db_1.UserService.GetUserById(ctx)];
                 case 2:
-                    __1.currency.forEach(function (element) { return __awaiter(_this, void 0, void 0, function () {
-                        var res;
-                        return __generator(this, function (_a) {
-                            switch (_a.label) {
-                                case 0:
-                                    if (!(element.callback_data == data)) return [3 /*break*/, 2];
-                                    return [4 /*yield*/, db_1.UserService.SetCurrency(ctx, element).then(function (res) { console.log(res); })["catch"](function (err) { console.log(err); })];
-                                case 1:
-                                    res = _a.sent();
-                                    return [2 /*return*/, res];
-                                case 2: return [2 /*return*/];
-                            }
-                        });
-                    }); });
-                    _a.label = 3;
-                case 3:
-                    ctx.answerCbQuery();
-                    return [2 /*return*/];
-            }
-        });
-    });
-}
-function renderSelectCurrency(ctx, user) {
-    return __awaiter(this, void 0, void 0, function () {
-        var message, i, renderSelectCurrencyKeyboard;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    message = "\u0412\u0430\u043C \u043D\u0443\u0436\u043D\u043E \u0443\u043A\u0430\u0437\u0430\u0442\u044C \u0432\u0430\u043B\u044E\u0442\u0443 \n\n\u0421\u043F\u0438\u0441\u043E\u043A \u0443\u043A\u0430\u0437\u0430\u043D\u043D\u044B\u0445 \u0432\u0430\u043C\u0438 \u0431\u0430\u043D\u043A\u043E\u0432";
-                    // \n<i>Настройки можно менять в настройках профиля</i>`
-                    for (i = 0; i < user.settings.banks.length; i++) {
-                        message += "\n".concat(i + 1, ". ").concat(user.settings.banks[i].text);
-                    }
-                    renderSelectCurrencyKeyboard = {
-                        parse_mode: 'HTML',
-                        reply_markup: {
-                            inline_keyboard: [
-                                [
-                                    {
-                                        text: 'BTC',
-                                        callback_data: 'btc'
-                                    },
-                                    {
-                                        text: 'USDT',
-                                        callback_data: 'usdt'
-                                    }
-                                ],
-                                [
-                                    {
-                                        text: 'Сбросить настройки',
-                                        callback_data: 'reset'
-                                    }
-                                ]
-                            ]
-                        }
-                    };
-                    return [4 /*yield*/, ctx.editMessageText(message, renderSelectCurrencyKeyboard)
-                        // ctx.wizard.selectStep(
-                    ];
-                case 1:
-                    _a.sent();
-                    // ctx.wizard.selectStep(
-                    return [2 /*return*/, ctx.wizard.selectStep(ctx.scene.session.cursor + 2)];
-            }
-        });
-    });
-}
-function renderSearchDeal(ctx) {
-    return __awaiter(this, void 0, void 0, function () {
-        var message, searchDealKeyboard;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    message = "\u0427\u0442\u043E\u0431\u044B \u043D\u0430\u0447\u0430\u0442\u044C \u043F\u043E\u0438\u0441\u043A, \u0412\u0430\u043C \u043D\u0443\u0436\u043D\u043E \u0443\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C \u043D\u0435\u043A\u043E\u0442\u043E\u0440\u044B\u0435 \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438. \n                    \n<i>\u041D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0438 \u043C\u043E\u0436\u043D\u043E \u043C\u0435\u043D\u044F\u0442\u044C \u0432 \u043D\u0430\u0441\u0442\u0440\u043E\u0439\u043A\u0430\u0445 \u043F\u0440\u043E\u0444\u0438\u043B\u044F</i>";
-                    searchDealKeyboard = {
-                        parse_mode: 'HTML',
-                        reply_markup: {
-                            inline_keyboard: [
-                                [
-                                    {
-                                        text: 'Продолжить',
-                                        callback_data: 'setSettings'
-                                    }
-                                ]
-                            ]
-                        }
-                    };
-                    return [4 /*yield*/, ctx.editMessageText(message, searchDealKeyboard)];
-                case 1:
-                    _a.sent();
-                    return [2 /*return*/];
-            }
-        });
-    });
-}
-function renderSearchD(ctx) {
-    var _a, _b, _c;
-    return __awaiter(this, void 0, void 0, function () {
-        var user, message, i, i, extra;
-        return __generator(this, function (_d) {
-            switch (_d.label) {
-                case 0: return [4 /*yield*/, db_1.UserService.GetUserById(ctx)];
-                case 1:
-                    user = _d.sent();
-                    if (!user) return [3 /*break*/, 8];
-                    if (!(((_a = user.settings.banks) === null || _a === void 0 ? void 0 : _a.length) == 0)) return [3 /*break*/, 3];
-                    return [4 /*yield*/, renderSearchDeal(ctx)];
-                case 2:
-                    _d.sent();
-                    return [3 /*break*/, 7];
-                case 3:
-                    if (!user.settings.banks) return [3 /*break*/, 7];
-                    if (!(((_b = user.settings.currency) === null || _b === void 0 ? void 0 : _b.length) !== 0)) return [3 /*break*/, 6];
-                    if (!user.settings.currency) return [3 /*break*/, 5];
-                    message = 'Выбранные банки: ';
-                    for (i = 0; i < user.settings.banks.length; i++) {
-                        message += "\n".concat(i + 1, ". ").concat(user.settings.banks[i].text);
-                    }
-                    message += '\nВыбранные валюты: ';
-                    for (i = 0; i < ((_c = user.settings.currency) === null || _c === void 0 ? void 0 : _c.length); i++) {
-                        message += "\n".concat(i + 1, ". ").concat(user.settings.currency[i].text);
-                    }
-                    extra = {
-                        parse_mode: 'HTML',
-                        reply_markup: {
-                            inline_keyboard: [
-                                [
-                                    {
-                                        text: 'Изменить параметры поиска',
-                                        callback_data: 'chagneSearchParams'
-                                    }
-                                ],
-                                [
-                                    {
-                                        text: 'Начать поиск',
-                                        callback_data: 'start_search'
-                                    }
-                                ],
-                                [
-                                    {
-                                        text: 'Назад',
-                                        callback_data: 'back'
-                                    }
-                                ]
-                            ]
-                        }
-                    };
-                    return [4 /*yield*/, ctx.editMessageText(message, extra)
-                        // return ctx.scene.enter('search')
-                    ];
-                case 4:
-                    _d.sent();
-                    _d.label = 5;
-                case 5: return [3 /*break*/, 7];
-                case 6:
-                    renderSelectCurrency(ctx, user);
-                    _d.label = 7;
-                case 7: return [3 /*break*/, 9];
-                case 8:
-                    // Если пользователя нет в базе данных
-                    ctx.scene.enter('home');
-                    _d.label = 9;
-                case 9: return [2 /*return*/];
-            }
-        });
-    });
-}
-exports.renderSearchD = renderSearchD;
-function searchScreen(ctx) {
-    return __awaiter(this, void 0, void 0, function () {
-        var user, message, buyerExtraKeyboard;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0: return [4 /*yield*/, db_1.UserService.GetUserById(ctx)];
-                case 1:
                     user = _a.sent();
-                    if (!user) return [3 /*break*/, 3];
-                    message = "\u0412\u0430\u0448 ID: <code>".concat(user.id, "</code> \n\u0420\u043E\u043B\u044C: <code>").concat(user.role, "</code> \n\u0412\u0430\u0448 e-mail: <code>").concat(user.email, "</code>\n");
-                    message += "\u0414\u0430\u0442\u0430 \u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0430\u0446\u0438\u0438: ".concat(user.date.registered, " \n\n");
-                    message += "\u0427\u0442\u043E\u0431\u044B \u043E\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C \u043F\u043E\u0438\u0441\u043A \u043C\u043E\u0436\u043D\u043E \u043D\u0430\u0436\u0430\u0442\u044C \u043D\u0430 \u043A\u043D\u043E\u043F\u043A\u0443 \u043D\u0438\u0436\u0435 <b>\u041E\u0441\u0442\u0430\u043D\u043E\u0432\u0438\u0442\u044C \u043F\u043E\u0438\u0441\u043A</b>, \n\n<b>\u0438\u043B\u0438</b> \u043E\u0442\u043F\u0440\u0430\u0432\u0438\u0442\u044C \u043A\u043E\u043C\u0430\u043D\u0434\u0443 /stop_search \n\n";
-                    message += "... \u0418\u0434\u0451\u0442 \u043F\u043E\u0438\u0441\u043A \uD83D\uDD0E";
-                    buyerExtraKeyboard = {
-                        parse_mode: 'HTML',
-                        reply_markup: {
-                            inline_keyboard: [
-                                [
-                                    {
-                                        text: 'Остановить поиск',
-                                        callback_data: 'stop_search'
-                                    }
-                                ]
-                            ]
-                        }
-                    };
-                    return [4 /*yield*/, ctx.editMessageText(message, buyerExtraKeyboard)];
-                case 2:
-                    _a.sent();
-                    ctx.answerCbQuery();
-                    _a.label = 3;
-                case 3: return [2 /*return*/];
-            }
-        });
-    });
-}
-// Поиск сделок
-function searchDeal(ctx) {
-    return __awaiter(this, void 0, void 0, function () {
-        var query, data, message, searchDealKeyboard_1, banks_1, temp_1;
-        var _this = this;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    query = ctx.update['callback_query'];
-                    data = query.data;
-                    if (!query) return [3 /*break*/, 11];
-                    // // Получение данных пользователя
-                    ctx.answerCbQuery();
-                    if (!(data == 'searchDeal')) return [3 /*break*/, 2];
-                    return [4 /*yield*/, renderSearchD(ctx)];
-                case 1: return [2 /*return*/, _a.sent()];
-                case 2:
-                    if (!(data == 'start_search')) return [3 /*break*/, 4];
-                    return [4 /*yield*/, searchScreen(ctx)];
-                case 3: return [2 /*return*/, _a.sent()];
-                case 4:
-                    if (!(data == 'stop_search')) return [3 /*break*/, 6];
-                    return [4 /*yield*/, renderSearchD(ctx)];
-                case 5: return [2 /*return*/, _a.sent()];
-                case 6:
-                    if (data == 'chagneSearchParams') {
-                        return [2 /*return*/, ctx.scene.enter('chagneSearchParams')];
-                    }
-                    if (!(data == 'back')) return [3 /*break*/, 8];
-                    return [4 /*yield*/, (0, CustomerGreeting_1.greeting)(ctx)];
-                case 7: return [2 /*return*/, _a.sent()];
-                case 8:
-                    if (!(data == 'setSettings')) return [3 /*break*/, 10];
-                    message = "\u0412\u044B\u0431\u0435\u0440\u0438\u0442\u0435 \u0431\u0430\u043D\u043A\u0438, \u0432 \u043A\u043E\u0442\u043E\u0440\u044B\u0435 \u043C\u043E\u0436\u0435\u0442\u0435 \u043F\u043E\u043B\u0443\u0447\u0430\u0442\u044C \u043E\u043F\u043B\u0430\u0442\u0443";
-                    searchDealKeyboard_1 = {
+                    message = "\u0423\u043A\u0430\u0436\u0438\u0442\u0435 \u043A\u0440\u0438\u043F\u0442\u043E\u0432\u0430\u043B\u044E\u0442\u0443 \u043A\u043E\u0442\u043E\u0440\u0443\u044E \u0445\u043E\u0442\u0438\u0442\u0435 \u043F\u0440\u0438\u043E\u0431\u0440\u0435\u0441\u0442\u0438";
+                    renderSelectCurrencyKeyboard = {
                         parse_mode: 'HTML',
                         reply_markup: {
                             inline_keyboard: []
                         }
                     };
-                    return [4 /*yield*/, db_1.UserService.GetBanks().then(function (response) {
-                            return response[0].data;
-                        })];
-                case 9:
-                    banks_1 = _a.sent();
-                    temp_1 = [];
-                    banks_1.forEach(function (element, index) { return __awaiter(_this, void 0, void 0, function () {
-                        var _a, _b;
-                        return __generator(this, function (_c) {
-                            temp_1.push(element);
-                            if (index % 2 == 1) {
-                                (_a = searchDealKeyboard_1.reply_markup) === null || _a === void 0 ? void 0 : _a.inline_keyboard.push(temp_1);
-                                temp_1 = [];
-                            }
-                            if (index == banks_1.length - 1) {
-                                (_b = searchDealKeyboard_1.reply_markup) === null || _b === void 0 ? void 0 : _b.inline_keyboard.push(temp_1);
-                            }
-                            return [2 /*return*/];
-                        });
-                    }); });
-                    ctx.editMessageText(message, searchDealKeyboard_1);
-                    ctx.wizard.next();
-                    _a.label = 10;
-                case 10:
-                    if (data == 'getStats') {
-                        ctx.answerCbQuery('Получение статистики');
+                    if (user) {
+                        if (user.settings) {
+                            temp_1 = [];
+                            crypto_currency.forEach(function (currency, index) {
+                                // @ts-ignore
+                                // if (user.settings.crypto_currency) {
+                                //     // @ts-ignore
+                                //     user.settings.crypto_currency.forEach((element, index) => {
+                                //         let tempvar = element.text + ' (удалить)'
+                                //         if ((element.callback_data === currency.element.callback_data)) {
+                                //             currency.element.text += ' (удалить)'
+                                //             currency.element.callback_data = 'remove_currency ' + currency.element.callback_data
+                                //             // splice
+                                //             // return render
+                                //         }
+                                //     });
+                                // }
+                                var _a;
+                                temp_1.push(currency.element);
+                                if (index % 2 == 1) {
+                                    (_a = renderSelectCurrencyKeyboard.reply_markup) === null || _a === void 0 ? void 0 : _a.inline_keyboard.push(temp_1);
+                                    temp_1 = [];
+                                }
+                            });
+                        }
                     }
-                    if (data == 'support') {
-                        ctx.answerCbQuery('Техподдержка');
-                    }
-                    _a.label = 11;
-                case 11: return [2 /*return*/];
+                    return [4 /*yield*/, ctx.editMessageText(message, renderSelectCurrencyKeyboard)];
+                case 3:
+                    _a.sent();
+                    ctx.wizard.selectStep(5);
+                    return [2 /*return*/];
             }
         });
     });
 }
+function selectCurrencyHandler(ctx) {
+    return __awaiter(this, void 0, void 0, function () {
+        var query, data_1, currency, currency, err_1;
+        var _this = this;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0:
+                    _a.trys.push([0, 9, , 10]);
+                    query = ctx.update['callback_query'];
+                    data_1 = query.data.split(' ');
+                    if (!query) return [3 /*break*/, 8];
+                    if (!(data_1[0] == 'continue')) return [3 /*break*/, 2];
+                    return [4 /*yield*/, SelectCryptoCurrency(ctx)];
+                case 1: return [2 /*return*/, _a.sent()];
+                case 2:
+                    if (!(data_1[0] == 'reset')) return [3 /*break*/, 4];
+                    return [4 /*yield*/, db_1.UserService.ResetSettings(ctx)
+                            .then(function (success) { ctx.answerCbQuery('Настройки сброшены'); ctx.scene.enter("home"); })["catch"](function (error) { console.log(error); return false; })];
+                case 3: return [2 /*return*/, _a.sent()];
+                case 4:
+                    if (!(data_1[0] !== 'remove_currency')) return [3 /*break*/, 6];
+                    return [4 /*yield*/, Currecny_Services_1["default"].GetAllCurrencies()];
+                case 5:
+                    currency = _a.sent();
+                    currency.forEach(function (item) { return __awaiter(_this, void 0, void 0, function () {
+                        var _this = this;
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0:
+                                    if (!(item.element.callback_data == data_1[0])) return [3 /*break*/, 2];
+                                    return [4 /*yield*/, db_1.UserService.SetCurrency(ctx, item.element)
+                                            .then(function () { return __awaiter(_this, void 0, void 0, function () {
+                                            return __generator(this, function (_a) {
+                                                switch (_a.label) {
+                                                    case 0: return [4 /*yield*/, ctx.answerCbQuery(data_1[0] + ' записан в бд')];
+                                                    case 1:
+                                                        _a.sent();
+                                                        return [4 /*yield*/, renderSelectCurrency(ctx)];
+                                                    case 2: return [2 /*return*/, _a.sent()];
+                                                }
+                                            });
+                                        }); })];
+                                case 1:
+                                    _a.sent();
+                                    _a.label = 2;
+                                case 2: return [2 /*return*/];
+                            }
+                        });
+                    }); });
+                    _a.label = 6;
+                case 6:
+                    if (!(data_1[0] == 'remove_currency')) return [3 /*break*/, 8];
+                    return [4 /*yield*/, Currecny_Services_1["default"].GetAllCurrencies()];
+                case 7:
+                    currency = _a.sent();
+                    currency.forEach(function (item) { return __awaiter(_this, void 0, void 0, function () {
+                        var _this = this;
+                        return __generator(this, function (_a) {
+                            switch (_a.label) {
+                                case 0:
+                                    if (!(item.element.callback_data == data_1[1])) return [3 /*break*/, 2];
+                                    console.log(item.element.callback_data);
+                                    return [4 /*yield*/, db_1.UserService.SpliceCurrency(ctx, item.element.callback_data)
+                                            .then(function () { return __awaiter(_this, void 0, void 0, function () {
+                                            return __generator(this, function (_a) {
+                                                switch (_a.label) {
+                                                    case 0: return [4 /*yield*/, ctx.answerCbQuery(data_1[1] + ' удален из бд')];
+                                                    case 1:
+                                                        _a.sent();
+                                                        return [4 /*yield*/, renderSelectCurrency(ctx)];
+                                                    case 2: return [2 /*return*/, _a.sent()];
+                                                }
+                                            });
+                                        }); })];
+                                case 1: return [2 /*return*/, _a.sent()];
+                                case 2: return [2 /*return*/];
+                            }
+                        });
+                    }); });
+                    _a.label = 8;
+                case 8: return [3 /*break*/, 10];
+                case 9:
+                    err_1 = _a.sent();
+                    console.log(err_1);
+                    return [3 /*break*/, 10];
+                case 10: return [2 /*return*/];
+            }
+        });
+    });
+}
+// Выбор валюты. 3 cursor
+function selectCurrency(ctx) {
+    return __awaiter(this, void 0, void 0, function () {
+        var _a;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
+                case 0:
+                    ctx.updateType == 'message' ? ctx.scene.enter("home") : '';
+                    if (!(ctx.updateType == 'callback_query')) return [3 /*break*/, 2];
+                    return [4 /*yield*/, selectCurrencyHandler(ctx)];
+                case 1:
+                    _a = _b.sent();
+                    return [3 /*break*/, 3];
+                case 2:
+                    _a = '';
+                    _b.label = 3;
+                case 3:
+                    _a;
+                    return [2 /*return*/];
+            }
+        });
+    });
+}
+function renderSelectCurrency(ctx) {
+    return __awaiter(this, void 0, void 0, function () {
+        var _this = this;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
+                case 0: return [4 /*yield*/, db_1.UserService.GetUserById(ctx)
+                        .then(function (user) { return __awaiter(_this, void 0, void 0, function () {
+                        var message_1, i, i, renderSelectCurrencyKeyboard_1, currency, temp_2;
+                        var _this = this;
+                        var _a, _b;
+                        return __generator(this, function (_c) {
+                            switch (_c.label) {
+                                case 0:
+                                    if (!user) return [3 /*break*/, 3];
+                                    if (!user.settings) return [3 /*break*/, 3];
+                                    message_1 = "\u0421\u043F\u0438\u0441\u043E\u043A \u0443\u043A\u0430\u0437\u0430\u043D\u043D\u044B\u0445 \u0432\u0430\u043C\u0438 \u0431\u0430\u043D\u043A\u043E\u0432:";
+                                    for (i = 0; i < user.settings.banks.length; i++) {
+                                        message_1 += "\n".concat(i + 1, ". ").concat(user.settings.banks[i].text);
+                                    }
+                                    message_1 += "\n\n\u0423\u043A\u0430\u0436\u0438\u0442\u0435 \u0432\u0430\u043B\u044E\u0442\u0443:";
+                                    for (i = 0; i < ((_a = user.settings.currency) === null || _a === void 0 ? void 0 : _a.length); i++) {
+                                        message_1 += "\n".concat(i + 1, ". ").concat(user.settings.currency[i].text);
+                                    }
+                                    renderSelectCurrencyKeyboard_1 = {
+                                        parse_mode: 'HTML',
+                                        reply_markup: {
+                                            inline_keyboard: []
+                                        }
+                                    };
+                                    return [4 /*yield*/, Currecny_Services_1["default"].GetAllCurrencies()];
+                                case 1:
+                                    currency = _c.sent();
+                                    temp_2 = [];
+                                    currency.forEach(function (currency, index) {
+                                        var _a;
+                                        user.settings.currency.forEach(function (element, index) {
+                                            var tempvar = element.text + ' (удалить)';
+                                            if ((element.callback_data === currency.element.callback_data)) {
+                                                currency.element.text += ' (удалить)';
+                                                currency.element.callback_data = 'remove_currency ' + currency.element.callback_data;
+                                                // splice
+                                                // return render
+                                            }
+                                        });
+                                        temp_2.push(currency.element);
+                                        if (index % 2 == 1) {
+                                            (_a = renderSelectCurrencyKeyboard_1.reply_markup) === null || _a === void 0 ? void 0 : _a.inline_keyboard.push(temp_2);
+                                            temp_2 = [];
+                                        }
+                                    });
+                                    if (user.settings.currency.length > 0) {
+                                        // Добавление Кнопки сброса после рендера кнопок
+                                        (_b = renderSelectCurrencyKeyboard_1.reply_markup) === null || _b === void 0 ? void 0 : _b.inline_keyboard.push([
+                                            {
+                                                text: 'Сбросить настройки',
+                                                callback_data: 'reset'
+                                            },
+                                            {
+                                                text: 'Продолжить',
+                                                callback_data: 'continue'
+                                            }
+                                        ]);
+                                    }
+                                    // console.log(ctx)
+                                    return [4 /*yield*/, ctx.editMessageText(message_1, renderSelectCurrencyKeyboard_1)["catch"](function () { return __awaiter(_this, void 0, void 0, function () { return __generator(this, function (_a) {
+                                            switch (_a.label) {
+                                                case 0: return [4 /*yield*/, ctx.reply(message_1, renderSelectCurrencyKeyboard_1)];
+                                                case 1: return [2 /*return*/, _a.sent()];
+                                            }
+                                        }); }); })];
+                                case 2:
+                                    // console.log(ctx)
+                                    _c.sent();
+                                    ctx.wizard.selectStep(3);
+                                    _c.label = 3;
+                                case 3: return [2 /*return*/];
+                            }
+                        });
+                    }); })];
+                case 1:
+                    _a.sent();
+                    return [2 /*return*/];
+            }
+        });
+    });
+}
+exports.renderSelectCurrency = renderSelectCurrency;
 var handler = new telegraf_1.Composer(); // function
 var customer = new telegraf_1.Scenes.WizardScene("customer", handler, function (ctx) { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
-    return [2 /*return*/, searchDeal(ctx)];
+    switch (_a.label) {
+        case 0: return [4 /*yield*/, CustomerServices_1["default"].main(ctx)];
+        case 1: return [2 /*return*/, _a.sent()];
+    }
 }); }); }, function (ctx) { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
-    return [2 /*return*/, Context_1.ContextService.selectBank(ctx)];
+    switch (_a.label) {
+        case 0: return [4 /*yield*/, CustomerServices_1["default"].selectBank(ctx)];
+        case 1: return [2 /*return*/, _a.sent()];
+    }
 }); }); }, function (ctx) { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
     return [2 /*return*/, selectCurrency(ctx)];
+}); }); }, function (ctx) { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
+    switch (_a.label) {
+        case 0: return [4 /*yield*/, CustomerServices_1.SumService.checkSum(ctx)];
+        case 1: return [2 /*return*/, _a.sent()];
+    }
+}); }); }, function (ctx) { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
+    switch (_a.label) {
+        case 0: return [4 /*yield*/, CustomerServices_1.CCurrencies.handler(ctx)];
+        case 1: return [2 /*return*/, _a.sent()];
+    }
+}); }); }, function (ctx) { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
+    switch (_a.label) {
+        case 0: return [4 /*yield*/, CustomerServices_1["default"].choosePaymentMethodHandler(ctx)];
+        case 1: return [2 /*return*/, _a.sent()];
+    }
+}); }); }, function (ctx) { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
+    switch (_a.label) {
+        case 0: return [4 /*yield*/, CustomerServices_1["default"].check_wallet(ctx)];
+        case 1: return [2 /*return*/, _a.sent()];
+    }
+}); }); }, function (ctx) { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
+    switch (_a.label) {
+        case 0: return [4 /*yield*/, CustomerServices_1["default"].select_exists_wallet(ctx)];
+        case 1: return [2 /*return*/, _a.sent()];
+    }
+}); }); }, function (ctx) { return __awaiter(void 0, void 0, void 0, function () {
+    return __generator(this, function (_a) {
+        ctx.editMessageText('Укажите сумму');
+        return [2 /*return*/];
+    });
+}); }, function (ctx) { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
+    switch (_a.label) {
+        case 0: return [4 /*yield*/, CustomerServices_1.AService.select_page(ctx)];
+        case 1: return [2 /*return*/, _a.sent()];
+    }
+}); }); }, function (ctx) { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
+    switch (_a.label) {
+        case 0: return [4 /*yield*/, CustomerServices_1.AService.single_ads(ctx)];
+        case 1: return [2 /*return*/, _a.sent()];
+    }
 }); }); });
-handler.action('searchDeal', function (ctx) { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
-    return [2 /*return*/, searchDeal(ctx)];
-}); }); });
-// handler.action('back', async (ctx) => ctx.scene.enter('customer'))
-customer.leave(function (ctx) { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
-    return [2 /*return*/, console.log("customer scene leave")];
+handler.action('create', function (ctx) { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
+    switch (_a.label) {
+        case 0: return [4 /*yield*/, CustomerServices_1["default"].main(ctx)];
+        case 1: return [2 /*return*/, _a.sent()];
+    }
 }); }); });
 customer.enter(function (ctx) { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
     switch (_a.label) {

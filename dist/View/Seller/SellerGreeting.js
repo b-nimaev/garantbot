@@ -40,35 +40,51 @@ exports.greeting = void 0;
 var db_1 = require("../../Controller/db");
 function greeting(ctx) {
     return __awaiter(this, void 0, void 0, function () {
-        var user, message, buyerExtraKeyboard;
+        var _this = this;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    if (!ctx.from) return [3 /*break*/, 3];
-                    return [4 /*yield*/, db_1.UserService.GetUserById(ctx)];
+                    if (!ctx.from) return [3 /*break*/, 2];
+                    return [4 /*yield*/, db_1.UserService.GetUserById(ctx).then(function (user) { return __awaiter(_this, void 0, void 0, function () {
+                            var message, buyerExtraKeyboard, _a;
+                            return __generator(this, function (_b) {
+                                switch (_b.label) {
+                                    case 0:
+                                        if (!user) return [3 /*break*/, 5];
+                                        message = "\u0412\u0430\u0448 ID: <code>".concat(user.id, "</code> \n\u0420\u043E\u043B\u044C: <code>\u041F\u0440\u043E\u0434\u0430\u0432\u0435\u0446</code>");
+                                        buyerExtraKeyboard = {
+                                            parse_mode: 'HTML',
+                                            reply_markup: {
+                                                inline_keyboard: [
+                                                    [
+                                                        {
+                                                            text: 'Найти сделку',
+                                                            callback_data: 'search_deal'
+                                                        }
+                                                    ]
+                                                ]
+                                            }
+                                        };
+                                        if (!(ctx.updateType == 'callback_query')) return [3 /*break*/, 2];
+                                        return [4 /*yield*/, ctx.editMessageText(message, buyerExtraKeyboard)];
+                                    case 1:
+                                        _a = _b.sent();
+                                        return [3 /*break*/, 4];
+                                    case 2: return [4 /*yield*/, ctx.reply(message, buyerExtraKeyboard)];
+                                    case 3:
+                                        _a = _b.sent();
+                                        _b.label = 4;
+                                    case 4:
+                                        _a;
+                                        _b.label = 5;
+                                    case 5: return [2 /*return*/];
+                                }
+                            });
+                        }); })];
                 case 1:
-                    user = _a.sent();
-                    console.log(user);
-                    if (!user) return [3 /*break*/, 3];
-                    message = "\u0412\u0430\u0448 ID: <code>".concat(user.id, "</code> \n\u0420\u043E\u043B\u044C: <code>\u041F\u0440\u043E\u0434\u0430\u0432\u0435\u0446</code> \n\u0412\u0430\u0448 e-mail: <code>").concat(user.email, "</code> \n\u0414\u0430\u0442\u0430 \u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0430\u0446\u0438\u0438: ").concat(user.date.registered, " \n\n\u0427\u0442\u043E\u0431\u044B \u043D\u0430\u0447\u0430\u0442\u044C \u0440\u0430\u0431\u043E\u0442\u0443, \u043D\u0430\u0436\u043C\u0438\u0442\u0435 \u043D\u0430 \u043A\u043D\u043E\u043F\u043A\u0443 \u043D\u0438\u0436\u0435 <b>\u041E\u0442\u043A\u0440\u044B\u0442\u044C \u0441\u0434\u0435\u043B\u043A\u0443</b>");
-                    buyerExtraKeyboard = {
-                        parse_mode: 'HTML',
-                        reply_markup: {
-                            inline_keyboard: [
-                                [
-                                    {
-                                        text: 'Открыть сделку',
-                                        callback_data: 'openDeal'
-                                    }
-                                ]
-                            ]
-                        }
-                    };
-                    return [4 /*yield*/, ctx.reply(message, buyerExtraKeyboard)];
-                case 2:
                     _a.sent();
-                    _a.label = 3;
-                case 3: return [2 /*return*/];
+                    _a.label = 2;
+                case 2: return [2 /*return*/];
             }
         });
     });

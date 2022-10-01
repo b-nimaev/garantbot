@@ -1,4 +1,4 @@
-import { ObjectId } from 'mongodb';
+import { ObjectID, ObjectId } from 'mongodb';
 import mongoose, { Schema, model, connect, STATES } from 'mongoose';
 import { Models } from 'mongoose';
 import { InlineKeyboardButton, User } from 'telegraf/typings/core/types/typegram';
@@ -25,10 +25,10 @@ export interface payment_method {
 
 // 1. Create an interface representing a document in MongoDB.
 export interface IUser extends User {
-    name: string | undefined;
-    email: string;
+    name?: string;
+    email?: string;
     avatar?: string;
-    lastModified: number;
+    lastModified?: number;
     id: any;
     is_bot: any;
     first_name: any;
@@ -57,6 +57,9 @@ export interface IUser extends User {
     settings_buyer: {
         banks: { text: string, callback_data: string }[],
         currency: { text: string, callback_data: string }[],
+        deal_id?: number,
+        deal_link?: string,
+        selected_ads?: ObjectId
     },
     middleware?: {
         opened_ads?: ObjectId,
@@ -65,10 +68,12 @@ export interface IUser extends User {
 }
 
 interface response {
-    user: User,
-    date: number,
+    date?: number,
     garantex_id?: number,
-    garantex_link?: string
+    garantex_link?: string,
+    ads_id?: ObjectId,
+    user_id?: number,
+    _id: ObjectId
 }
 
 interface IAds {
@@ -86,6 +91,15 @@ interface IAds {
 interface newitem extends IAds {
     user_id: number
 }
+
+const response_schema = new Schema<response>({
+    date: { type: Number, required: false },
+    garantex_id: { type: Number, required: false },
+    garantex_link: { type: String, required: false },
+    ads_id: { type: ObjectId, required: false },
+    _id: { type: ObjectId, required: true },
+    user_id: { type: Number, required: false }
+})
 
 const paySchema = new Schema<payment_method>({
     text: String,
@@ -105,19 +119,8 @@ const adsSchema = new Schema<IAds>({
     }],
     user_id: Number,
     responses: [{
-        user: {
-            id: Number,
-            name: String,
-            email: String,
-            avatar: String,
-            is_bot: Boolean,
-            role: String,
-            first_name: String,
-        },
-        date: Number,
-        garantex_id: { type: Number, required: false },
-        garantex_link: { type: String, required: false },
-        required: false
+        _id: { type: ObjectId, required: true },
+        user_id: { type: Number, required: false }
     }]
 })
 
@@ -149,7 +152,19 @@ const userSchema = new Schema<IUser>({
     ads: [adsSchema] || undefined || null,
     settings_buyer: {
         banks: [Object],
-        currency: [Object]
+        currency: [Object],
+        deal_id: {
+            type: String,
+            required: false
+        },
+        deal_link: {
+            type: String,
+            required: false
+        },
+        selected_ads: {
+            type: ObjectId,
+            required: false
+        }
     },
     middleware: {
         opened_ads: {
@@ -173,6 +188,7 @@ export const UserModel = model<IUser>('User', userSchema);
 const BankModel = model<IBank>('Bank', bankSchema);
 export const ADSModel = model<IAds>('ads', adsSchema);
 const PayModel = model<payment_method>('payment_method', paySchema)
+export const ResponseModel = model<response>('response', response_schema)
 run().catch(err => console.log(err));
 
 export async function run() {
