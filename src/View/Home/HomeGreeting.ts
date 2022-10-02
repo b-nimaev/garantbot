@@ -29,6 +29,7 @@ export async function greeting(ctx: MyContext) {
         if (ctx.from) {
             await UserService.GetUserById(ctx).then(async (user) => {
                 if (user) {
+                    console.log(user)
                     if (user.role == 'customer' || user.role == 'seller') {
                         user.role == 'customer' ? await ctx.scene.enter("customer") : false
                         user.role == 'seller' ? await ctx.scene.enter("seller") : false

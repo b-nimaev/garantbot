@@ -149,7 +149,7 @@ const userSchema = new Schema<IUser>({
         pre_sum: Number,
         pre_save: String || Number || undefined || null
     },
-    ads: [adsSchema] || undefined || null,
+    ads: [{ type: adsSchema, required: false }],
     settings_buyer: {
         banks: [Object],
         currency: [Object],
@@ -520,6 +520,7 @@ export class UserService {
     static async SetRole(ctx: MyContext) {
         try {
             let role = ctx.update["callback_query"].data
+            console.log(role)
             return await UserModel.updateOne({ id: ctx.from?.id }, { $set: { role: role } })
                 .then(() => { ctx.scene.enter(role) })
         } catch (error) {

@@ -11,7 +11,6 @@ export default class {
     static async greeting(ctx: MyContext) {
         if (ctx.from) {
             await UserService.GetUserById(ctx).then(async (user) => {
-
                 if (user) {
                     let message = `Ваш ID: <code>${user.id}</code> \nРоль: <code>Продавец</code>`
 

@@ -794,6 +794,9 @@ export class AService {
                         // @ts-ignore
                         if (ads.responses.length == 0) {
                             ctx.answerCbQuery("Отликов нет!")
+                        } else {
+                            // @ts-ignore
+                            console.log(ads.responses)
                         }
                     }
                 
