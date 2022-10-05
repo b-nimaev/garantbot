@@ -333,6 +333,9 @@ export default class CustomerService {
 
     static async select_exists_wallet(ctx: MyContext) {
         try {
+
+            console.log(ctx.updateType + ' clicked!')
+
             if (ctx.updateType == 'callback_query') {
                 let callback_data = ctx.update["callback_query"].data
 
