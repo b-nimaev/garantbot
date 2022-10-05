@@ -323,7 +323,11 @@ export default class CustomerService {
                 message += `\n\nЧтобы удалить кошелёк отправьте <code><b>/delete адрес_кошелька</b></code>`
 
                 ctx.wizard.selectStep(8)
-                await ctx.editMessageText(message, extra)
+                if (ctx.updateType == 'callback_query') {
+                    await ctx.editMessageText(message, extra)
+                } else {
+                    await ctx.reply(message, extra)
+                }
             }
 
         } catch (err) {
