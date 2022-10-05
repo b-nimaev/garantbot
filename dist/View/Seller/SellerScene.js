@@ -37,13 +37,40 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 exports.__esModule = true;
 var telegraf_1 = require("telegraf");
-var SellerGreeting_1 = require("./SellerGreeting");
+var SellerService_1 = require("./SellerService");
 require("dotenv").config();
 var handler = new telegraf_1.Composer(); // function
-var seller = new telegraf_1.Scenes.WizardScene("seller", handler);
-handler.action('openDeal', function (ctx) { return __awaiter(void 0, void 0, void 0, function () {
+var seller = new telegraf_1.Scenes.WizardScene("seller", handler, function (ctx) { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
+    switch (_a.label) {
+        case 0: return [4 /*yield*/, SellerService_1["default"].handler(ctx)];
+        case 1: return [2 /*return*/, _a.sent()];
+    }
+}); }); }, function (ctx) { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
+    switch (_a.label) {
+        case 0: return [4 /*yield*/, SellerService_1["default"].single_ads_handler(ctx)];
+        case 1: return [2 /*return*/, _a.sent()];
+    }
+}); }); }, function (ctx) { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
+    switch (_a.label) {
+        case 0: return [4 /*yield*/, SellerService_1["default"].fetch_data_handler(ctx)];
+        case 1: return [2 /*return*/, _a.sent()];
+    }
+}); }); });
+handler.action("search_deal", function (ctx) { return __awaiter(void 0, void 0, void 0, function () {
     return __generator(this, function (_a) {
-        ctx.reply('Открытие сделки ');
+        switch (_a.label) {
+            case 0: return [4 /*yield*/, SellerService_1["default"].get_ads(ctx)];
+            case 1:
+                _a.sent();
+                ctx.wizard.next();
+                ctx.answerCbQuery('Список объявлений получен!');
+                return [2 /*return*/];
+        }
+    });
+}); });
+handler.action("my_responses", function (ctx) { return __awaiter(void 0, void 0, void 0, function () {
+    return __generator(this, function (_a) {
+        ctx.answerCbQuery('Мои отклики');
         return [2 /*return*/];
     });
 }); });
@@ -52,9 +79,12 @@ seller.leave(function (ctx) { return __awaiter(void 0, void 0, void 0, function 
 }); }); });
 seller.enter(function (ctx) { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
     switch (_a.label) {
-        case 0: return [4 /*yield*/, (0, SellerGreeting_1.greeting)(ctx)];
+        case 0: return [4 /*yield*/, SellerService_1["default"].greeting(ctx)];
         case 1: return [2 /*return*/, _a.sent()];
     }
+}); }); });
+seller.start(function (ctx) { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
+    return [2 /*return*/, ctx.scene.enter("home")];
 }); }); });
 exports["default"] = seller;
 //# sourceMappingURL=SellerScene.js.map

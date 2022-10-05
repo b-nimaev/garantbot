@@ -37,62 +37,80 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 exports.__esModule = true;
 exports.greeting = void 0;
+var Context_1 = require("../../Controller/Context");
 var db_1 = require("../../Controller/db");
 function greeting(ctx) {
     return __awaiter(this, void 0, void 0, function () {
-        var user, message, buyerExtraKeyboard, _a;
-        return __generator(this, function (_b) {
-            switch (_b.label) {
+        var _this = this;
+        return __generator(this, function (_a) {
+            switch (_a.label) {
                 case 0:
-                    if (!ctx.from) return [3 /*break*/, 7];
-                    return [4 /*yield*/, db_1.UserService.GetUserById(ctx)];
+                    if (!ctx.from) return [3 /*break*/, 2];
+                    return [4 /*yield*/, db_1.UserService.GetUserById(ctx)
+                            .then(function (user) { return __awaiter(_this, void 0, void 0, function () {
+                            var date, message, buyerExtraKeyboard, _a;
+                            return __generator(this, function (_b) {
+                                switch (_b.label) {
+                                    case 0:
+                                        if (!user) return [3 /*break*/, 6];
+                                        return [4 /*yield*/, Context_1.ContextService.GetFormattedTime(user.date.registered)];
+                                    case 1:
+                                        date = _b.sent();
+                                        message = "\u0412\u0430\u0448 ID: <code>".concat(user.id, "</code>\n");
+                                        message += "\u0420\u043E\u043B\u044C: <code>\u041F\u043E\u043A\u0443\u043F\u0430\u0442\u0435\u043B\u044C</code>\n";
+                                        buyerExtraKeyboard = {
+                                            parse_mode: 'HTML',
+                                            reply_markup: {
+                                                inline_keyboard: [
+                                                    [
+                                                        {
+                                                            text: 'Создать объявление',
+                                                            callback_data: 'create'
+                                                        },
+                                                    ],
+                                                    [
+                                                        {
+                                                            text: 'Мои объявления',
+                                                            callback_data: 'my_ads'
+                                                        },
+                                                    ]
+                                                ]
+                                            }
+                                        };
+                                        // [
+                                        //     {
+                                        //         text: 'Статистика',
+                                        //         callback_data: 'getStats'
+                                        //     }
+                                        // ], [
+                                        //     {
+                                        //         text: 'Написать в поддержку',
+                                        //         callback_data: 'support'
+                                        //     },
+                                        // ]
+                                        ctx.wizard.selectStep(1);
+                                        // ctx.wizard.next()
+                                        ctx.update['callback_query'] ? ctx.answerCbQuery() : true;
+                                        if (!ctx.update['callback_query']) return [3 /*break*/, 3];
+                                        return [4 /*yield*/, ctx.editMessageText(message, buyerExtraKeyboard)];
+                                    case 2:
+                                        _a = _b.sent();
+                                        return [3 /*break*/, 5];
+                                    case 3: return [4 /*yield*/, ctx.reply(message, buyerExtraKeyboard)];
+                                    case 4:
+                                        _a = _b.sent();
+                                        _b.label = 5;
+                                    case 5:
+                                        _a;
+                                        _b.label = 6;
+                                    case 6: return [2 /*return*/];
+                                }
+                            });
+                        }); })];
                 case 1:
-                    user = _b.sent();
-                    if (!user) return [3 /*break*/, 6];
-                    message = "\u0412\u0430\u0448 ID: <code>".concat(user.id, "</code> \n\u0420\u043E\u043B\u044C: <code>\u041F\u043E\u043A\u0443\u043F\u0430\u0442\u0435\u043B\u044C</code> \n\u0412\u0430\u0448 e-mail: <code>").concat(user.email, "</code> \n\u0414\u0430\u0442\u0430 \u0440\u0435\u0433\u0438\u0441\u0442\u0440\u0430\u0446\u0438\u0438: ").concat(user.date.registered, " \n\n\u0427\u0442\u043E\u0431\u044B \u043D\u0430\u0447\u0430\u0442\u044C \u0440\u0430\u0431\u043E\u0442\u0443, \u043D\u0430\u0436\u043C\u0438\u0442\u0435 \u043D\u0430 \u043A\u043D\u043E\u043F\u043A\u0443 \u043D\u0438\u0436\u0435 <b>\u041D\u0430\u0439\u0442\u0438 \u0441\u0434\u0435\u043B\u043A\u0443</b>");
-                    buyerExtraKeyboard = {
-                        parse_mode: 'HTML',
-                        reply_markup: {
-                            inline_keyboard: [
-                                [
-                                    {
-                                        text: 'Найти сделку',
-                                        callback_data: 'searchDeal'
-                                    },
-                                ], [
-                                    {
-                                        text: 'Статистика',
-                                        callback_data: 'getStats'
-                                    }
-                                ], [
-                                    {
-                                        text: 'Написать в поддержку',
-                                        callback_data: 'support'
-                                    },
-                                ]
-                            ]
-                        }
-                    };
-                    console.log('hey');
-                    ctx.wizard.selectStep(0);
-                    ctx.wizard.next();
-                    ctx.update['callback_query'] ? ctx.answerCbQuery() : true;
-                    if (!ctx.update['callback_query']) return [3 /*break*/, 3];
-                    return [4 /*yield*/, ctx.editMessageText(message, buyerExtraKeyboard)];
-                case 2:
-                    _a = _b.sent();
-                    return [3 /*break*/, 5];
-                case 3: return [4 /*yield*/, ctx.reply(message, buyerExtraKeyboard)];
-                case 4:
-                    _a = _b.sent();
-                    _b.label = 5;
-                case 5:
-                    _a;
-                    return [3 /*break*/, 7];
-                case 6:
-                    ctx.scene.enter('home');
-                    _b.label = 7;
-                case 7: return [2 /*return*/];
+                    _a.sent();
+                    _a.label = 2;
+                case 2: return [2 /*return*/];
             }
         });
     });

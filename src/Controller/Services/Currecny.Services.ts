@@ -12,7 +12,7 @@ const CurrenciesShema = new Schema<ICurrency>({
 })
 
 const CurrencyModel = model<ICurrency>('currencie', CurrenciesShema)
-const CryptoCurrencyModel = model<ICurrency>('crypto_currencie', CurrenciesShema)
+export const CryptoCurrencyModel = model<ICurrency>('crypto_currencie', CurrenciesShema)
 
 export default class CurrencyService {
 

@@ -42,25 +42,11 @@ var db_1 = require("../../Controller/db");
 function greeting(ctx) {
     var _a;
     return __awaiter(this, void 0, void 0, function () {
-        var user, message, extra, message, _b;
-        return __generator(this, function (_c) {
-            switch (_c.label) {
+        var extra, err_1, message;
+        var _this = this;
+        return __generator(this, function (_b) {
+            switch (_b.label) {
                 case 0:
-                    if (!ctx.from) return [3 /*break*/, 12];
-                    return [4 /*yield*/, db_1.UserService.GetUserById(ctx)];
-                case 1:
-                    user = _c.sent();
-                    if (!user) return [3 /*break*/, 6];
-                    message = void 0;
-                    if (!(user.role == 'buyer')) return [3 /*break*/, 3];
-                    return [4 /*yield*/, ctx.scene.enter("customer")];
-                case 2: return [2 /*return*/, _c.sent()];
-                case 3:
-                    if (!(user.role == 'seller')) return [3 /*break*/, 5];
-                    return [4 /*yield*/, ctx.scene.enter('seller')];
-                case 4: return [2 /*return*/, _c.sent()];
-                case 5: return [3 /*break*/, 12];
-                case 6:
                     extra = {
                         parse_mode: 'HTML',
                         reply_markup: {
@@ -72,38 +58,104 @@ function greeting(ctx) {
                                     },
                                     {
                                         text: 'Покупатель',
-                                        callback_data: 'buyer'
+                                        callback_data: 'customer'
                                     }
                                 ]
                             ]
                         }
                     };
-                    // Если пользователя нет в базе данных
-                    return [4 /*yield*/, db_1.UserService.SaveUser(ctx)];
-                case 7:
-                    // Если пользователя нет в базе данных
-                    _c.sent();
+                    _b.label = 1;
+                case 1:
+                    _b.trys.push([1, 4, , 6]);
+                    if (!ctx.from) return [3 /*break*/, 3];
+                    return [4 /*yield*/, db_1.UserService.GetUserById(ctx).then(function (user) { return __awaiter(_this, void 0, void 0, function () {
+                            var _a, _b, message, _c, message, _d;
+                            var _e, _f;
+                            return __generator(this, function (_g) {
+                                switch (_g.label) {
+                                    case 0:
+                                        if (!user) return [3 /*break*/, 13];
+                                        if (!(user.role == 'customer' || user.role == 'seller')) return [3 /*break*/, 7];
+                                        if (!(user.role == 'customer')) return [3 /*break*/, 2];
+                                        return [4 /*yield*/, ctx.scene.enter("customer")];
+                                    case 1:
+                                        _a = _g.sent();
+                                        return [3 /*break*/, 3];
+                                    case 2:
+                                        _a = false;
+                                        _g.label = 3;
+                                    case 3:
+                                        _a;
+                                        if (!(user.role == 'seller')) return [3 /*break*/, 5];
+                                        return [4 /*yield*/, ctx.scene.enter("seller")];
+                                    case 4:
+                                        _b = _g.sent();
+                                        return [3 /*break*/, 6];
+                                    case 5:
+                                        _b = false;
+                                        _g.label = 6;
+                                    case 6:
+                                        _b;
+                                        return [3 /*break*/, 12];
+                                    case 7:
+                                        message = "\u041F\u0440\u0438\u0432\u0435\u0442, ".concat((_e = ctx.from) === null || _e === void 0 ? void 0 : _e.first_name, ", \u0432\u044B\u0431\u0435\u0440\u0438 \u0441\u0432\u043E\u044E \u0440\u043E\u043B\u044C \uD83D\uDDE1");
+                                        if (!
+                                        // @ts-ignore
+                                        ctx.update["message"]) 
+                                        // @ts-ignore
+                                        return [3 /*break*/, 9];
+                                        return [4 /*yield*/, ctx.reply(message, extra)];
+                                    case 8:
+                                        _c = _g.sent();
+                                        return [3 /*break*/, 11];
+                                    case 9: return [4 /*yield*/, ctx.editMessageText(message, extra)];
+                                    case 10:
+                                        _c = _g.sent();
+                                        _g.label = 11;
+                                    case 11:
+                                        // @ts-ignore
+                                        _c;
+                                        _g.label = 12;
+                                    case 12: return [3 /*break*/, 19];
+                                    case 13: return [4 /*yield*/, db_1.UserService.SaveUser(ctx)];
+                                    case 14:
+                                        _g.sent();
+                                        message = "\u041F\u0440\u0438\u0432\u0435\u0442, ".concat((_f = ctx.from) === null || _f === void 0 ? void 0 : _f.first_name, ", \u0432\u044B\u0431\u0435\u0440\u0438 \u0441\u0432\u043E\u044E \u0440\u043E\u043B\u044C \uD83D\uDDE1");
+                                        if (!
+                                        // @ts-ignore
+                                        ctx.update["message"]) 
+                                        // @ts-ignore
+                                        return [3 /*break*/, 16];
+                                        return [4 /*yield*/, ctx.reply(message, extra)];
+                                    case 15:
+                                        _d = _g.sent();
+                                        return [3 /*break*/, 18];
+                                    case 16: return [4 /*yield*/, ctx.editMessageText(message, extra)];
+                                    case 17:
+                                        _d = _g.sent();
+                                        _g.label = 18;
+                                    case 18:
+                                        // @ts-ignore
+                                        _d;
+                                        _g.label = 19;
+                                    case 19: return [2 /*return*/];
+                                }
+                            });
+                        }); })];
+                case 2:
+                    _b.sent();
+                    _b.label = 3;
+                case 3: return [3 /*break*/, 6];
+                case 4:
+                    err_1 = _b.sent();
                     message = "\u041F\u0440\u0438\u0432\u0435\u0442, ".concat((_a = ctx.from) === null || _a === void 0 ? void 0 : _a.first_name, ", \u0432\u044B\u0431\u0435\u0440\u0438 \u0441\u0432\u043E\u044E \u0440\u043E\u043B\u044C \uD83D\uDDE1");
-                    if (!
                     // @ts-ignore
-                    ctx.update["message"]) 
-                    // @ts-ignore
-                    return [3 /*break*/, 9];
                     return [4 /*yield*/, ctx.reply(message, extra)];
-                case 8:
-                    _b = _c.sent();
-                    return [3 /*break*/, 11];
-                case 9: return [4 /*yield*/, ctx.reply(message, extra)];
-                case 10:
-                    _b = _c.sent();
-                    _c.label = 11;
-                case 11:
+                case 5:
                     // @ts-ignore
-                    _b;
-                    _c.label = 12;
-                case 12:
-                    ctx.wizard.next();
-                    return [2 /*return*/];
+                    _b.sent();
+                    return [3 /*break*/, 6];
+                case 6: return [2 /*return*/];
             }
         });
     });

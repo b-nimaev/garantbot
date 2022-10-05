@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node-dev ./src/index.ts",
-    "build": "tsc --build tsconfig.json && node ./dist/src/index.js"
+    "build": "tsc --build tsconfig.json && node ./dist/index.js"
   },
   "keywords": [
     "telegram-bot-api",

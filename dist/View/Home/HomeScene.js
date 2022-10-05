@@ -40,31 +40,24 @@ var telegraf_1 = require("telegraf");
 var db_1 = require("../../Controller/db");
 var HomeGreeting_1 = require("./HomeGreeting");
 require("dotenv").config();
-function setRole(ctx) {
-    return __awaiter(this, void 0, void 0, function () {
-        var query, data;
-        return __generator(this, function (_a) {
-            query = ctx.update['callback_query'];
-            data = query.data;
-            if (query) {
-                if (data == 'seller' || data == 'buyer') {
-                    db_1.UserService.SetRole(ctx);
-                    if (data == 'seller') {
-                        ctx.scene.enter('seller');
-                    }
-                    if (data == 'buyer') {
-                        ctx.scene.enter('customer');
-                    }
-                }
-            }
-            return [2 /*return*/];
-        });
-    });
-}
 var handler = new telegraf_1.Composer(); // function
-var home = new telegraf_1.Scenes.WizardScene("home", handler, function (ctx) { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
-    return [2 /*return*/, setRole(ctx)];
-}); }); });
+var home = new telegraf_1.Scenes.WizardScene("home", handler);
+home.action('seller', function (ctx) { return __awaiter(void 0, void 0, void 0, function () {
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4 /*yield*/, db_1.UserService.SetRole(ctx)];
+            case 1: return [2 /*return*/, _a.sent()];
+        }
+    });
+}); });
+home.action('customer', function (ctx) { return __awaiter(void 0, void 0, void 0, function () {
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4 /*yield*/, db_1.UserService.SetRole(ctx)];
+            case 1: return [2 /*return*/, _a.sent()];
+        }
+    });
+}); });
 home.leave(function (ctx) { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
     return [2 /*return*/, console.log("home leave")];
 }); }); });

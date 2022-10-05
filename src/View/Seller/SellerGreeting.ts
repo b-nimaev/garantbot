@@ -9,7 +9,7 @@ export async function greeting(ctx: MyContext) {
         await UserService.GetUserById(ctx).then(async (user) => {
 
             if (user) {
-                let message = `Ваш ID: <code>${user.id}</code> \nРоль: <code>Продавец</code> \nВаш e-mail: <code>${user.email}</code> \nДата регистрации: ${user.date.registered} \n\nЧтобы начать работу, нажмите на кнопку ниже <b>Открыть сделку</b>`
+                let message = `Ваш ID: <code>${user.id}</code> \nРоль: <code>Продавец</code>`
     
                 const buyerExtraKeyboard: ExtraEditMessageText = {
                     parse_mode: 'HTML',
@@ -17,8 +17,8 @@ export async function greeting(ctx: MyContext) {
                         inline_keyboard: [
                             [
                                 {
-                                    text: 'Открыть сделку',
-                                    callback_data: 'openDeal'
+                                    text: 'Найти сделку',
+                                    callback_data: 'search_deal'
                                 }
                             ]
                         ]

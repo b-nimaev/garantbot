@@ -37,45 +37,10 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 exports.__esModule = true;
 var telegraf_1 = require("telegraf");
-var CustomerScene_1 = require("../Customer/CustomerScene");
 var SearchGreeting_1 = require("./SearchGreeting");
 require("dotenv").config();
-function stopSearch(ctx) {
-    return __awaiter(this, void 0, void 0, function () {
-        var query, data;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    query = ctx.update['callback_query'];
-                    data = query.data;
-                    ctx.answerCbQuery();
-                    if (!query) return [3 /*break*/, 3];
-                    if (!(data == 'stop_search')) return [3 /*break*/, 3];
-                    return [4 /*yield*/, ctx.scene.enter('home')];
-                case 1:
-                    _a.sent();
-                    return [4 /*yield*/, (0, CustomerScene_1.renderSearchD)(ctx)];
-                case 2:
-                    _a.sent();
-                    _a.label = 3;
-                case 3: return [2 /*return*/];
-            }
-        });
-    });
-}
 var handler = new telegraf_1.Composer(); // function
-var search = new telegraf_1.Scenes.WizardScene("search", handler, function (ctx) { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
-    switch (_a.label) {
-        case 0: return [4 /*yield*/, stopSearch(ctx)];
-        case 1: return [2 /*return*/, _a.sent()];
-    }
-}); }); });
-handler.action('stop_search', function (ctx) { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
-    switch (_a.label) {
-        case 0: return [4 /*yield*/, stopSearch(ctx)];
-        case 1: return [2 /*return*/, _a.sent()];
-    }
-}); }); });
+var search = new telegraf_1.Scenes.WizardScene("search", handler);
 search.leave(function (ctx) { return __awaiter(void 0, void 0, void 0, function () { return __generator(this, function (_a) {
     return [2 /*return*/, console.log("search scene leave")];
 }); }); });
