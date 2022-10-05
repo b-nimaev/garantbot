@@ -93,7 +93,7 @@ if (process.env.mode === "development") {
             console.error(err)
         })
 } else {
-    bot.telegram.setWebhook(`https://say-an.ru${secretPath}`)
+    bot.telegram.setWebhook(`https://anoname.xyz${secretPath}`)
         .then((status) => console.log('Webhook setted: ' + status))
     console.log(secretPath)
 }
