@@ -2,6 +2,7 @@
 import { Markup, Scenes, session, Telegraf } from 'telegraf'
 import { PaymentService, UserService } from './Controller/db';
 import { MyContext } from './Model/Model'
+var request = require('request');
 
 // Scenes
 import home from './View/Home/HomeScene';
@@ -12,6 +13,7 @@ import chagneSearchParams from './View/ChangeSearchParams/ChangeSearchParamsScen
 import CurrencyService from './Controller/Services/Currecny.Services';
 import { ContextService } from './Controller/Context';
 import { ObjectId } from 'mongodb';
+import Garantex from './Controller/GarantexService';
 
 // SSL
 const fs = require('fs');
@@ -56,6 +58,14 @@ bot.command('set_crypto', async (ctx) => {
     }
 })
 
+bot.command('test', async (ctx) => {
+    try {
+        await Garantex.get_user('S28')
+    } catch (err) {
+        console.log(err)
+    }
+})
+
 bot.command('set_payments', async (ctx) => {
     try {
         await PaymentService.InsertPayments(ctx)
@@ -69,6 +79,31 @@ bot.command('find', async (ctx) => {
     await UserService.FindDoc(id)
 })
 
+bot.command('get_ads', async (ctx) => {
+    await Garantex.get_ads("sell", false)
+        .then((response) => console.log(response))
+})
+
+bot.command('ads', async (ctx) => {
+    // 3492
+    let res = await Garantex.ads(ctx, 3492)
+    let message = ``
+    message += `id: ${res.id}\n`
+    message += `version_id: ${res.version_id}\n`
+    message += `member: ${res.member}\n`
+    message += `min: ${res.min}\n`
+    message += `max: ${res.max}\n`,
+        message += `payment_method: ${res.payment_method}\n`
+    message += `description: ${res.description}\n`
+    message += `direction: ${res.direction}\n`
+    message += `price: ${res.price}\n`
+    message += `currency: ${res.currency}\n`
+    message += `fiat_currency: ${res.fiat_currency}\n`
+    message += `min_rating: ${res.min_rating}\n`
+    message += `verified_only: ${res.verified_only}`
+    await ctx.reply(message)
+})
+
 export default bot
 const app = express()
 const port = process.env.port
@@ -79,7 +114,6 @@ const stage = new Scenes.Stage<MyContext>(scenes, {
 
 // Set webhook
 if (process.env.mode === "development") {
-
     const fetch = require('node-fetch')
     fetch('http://localhost:4040/api/tunnels')
         .then(res => res.json())

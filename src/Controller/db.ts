@@ -7,7 +7,7 @@ import { MyContext } from '../Model/Model';
 import ICurrency from '../Model/Services.Currency.Model';
 import CustomerService from '../View/Customer/CustomerServices';
 require("dotenv").config();
-const autoIncrement = require('mongoose-auto-increment');
+// const autoIncrement = require('mongoose-auto-increment');
 let uri = <string>process.env.dbcon;
 export async function paginate(array, page_size, page_number) {
     // human-readable page numbers usually start with 1, so we reduce 1 in the first argument

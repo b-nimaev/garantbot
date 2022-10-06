@@ -241,6 +241,8 @@ export default class {
 
             if (callback_data == 'response') {
                 //
+                await this.fetch_data(ctx)
+                /*
                 let user = await UserService.GetUserById(ctx)
                 if (user) {
 
@@ -282,27 +284,16 @@ export default class {
                             }
                         }
 
-                        // .then(async (result) => {
-                        //     if (result) {
-                        //         let swap = new ResponseModel(result.toJSON())
-                        //         swap.ads_id = swap._id
-                        //         swap._id = new mongoose.Types.ObjectId()
-                        //         // swap.isNew = true
-                        //         await swap.save().then(async (result2) => {
-                        //             console.log(result2)
-                        //         })
-                        //         ctx.answerCbQuery()
-                        //     }
-                        // })
                     } catch (err) {
                         console.log(err)
                     }
 
                 }
+                */
             }
 
             if (callback_data == 'back') {
-                await ctx.wizard.selectStep(1)
+                ctx.wizard.selectStep(1)
                 await this.get_ads(ctx)
             }
 
@@ -344,7 +335,9 @@ export default class {
 
         if (ctx.updateType == 'callback_query') {
             let callback_data = ctx.update['callback_query'].data
+
             if (callback_data == 'back') {
+
                 let user = await UserModel.findOne({
                     id: ctx.from?.id
                 })
@@ -362,6 +355,7 @@ export default class {
 
                 ctx.wizard.selectStep(2)
             }
+
         }
 
         if (ctx.updateType == 'message') {
