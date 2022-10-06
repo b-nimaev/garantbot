@@ -517,12 +517,22 @@ export class UserService {
         }
     }
 
-    static async SetRole(ctx: MyContext) {
+    static async SetRole(ctx: MyContext, handle?: 'unset') {
         try {
-            let role = ctx.update["callback_query"].data
-            console.log(role)
-            return await UserModel.updateOne({ id: ctx.from?.id }, { $set: { role: role } })
-                .then(() => { ctx.scene.enter(role) })
+
+            if (ctx.updateType == 'callback_query') {
+                let role = ctx.update["callback_query"].data
+                console.log(role)
+                return await UserModel.updateOne({ id: ctx.from?.id }, { $set: { role: role } })
+                    .then(() => { ctx.scene.enter(role) })
+            }
+
+            if (ctx.updateType == 'message') {
+                if (handle == 'unset') {
+                    await UserModel.updateOne({ id: ctx.from?.id }, { $unset: { role: "" } })
+                }
+            }
+
         } catch (error) {
             console.log(error)
         }
