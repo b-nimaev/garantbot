@@ -14,6 +14,7 @@ import CurrencyService from './Controller/Services/Currecny.Services';
 import { ContextService } from './Controller/Context';
 import { ObjectId } from 'mongodb';
 import Garantex from './Controller/GarantexService';
+import getToken from './get_token';
 
 // SSL
 const fs = require('fs');
@@ -75,13 +76,29 @@ bot.command('set_payments', async (ctx) => {
 })
 
 bot.command('find', async (ctx) => {
-    let id ='63354873bfd9635a1530e5c7'
+    let id = '63354873bfd9635a1530e5c7'
     await UserService.FindDoc(id)
 })
 
 bot.command('get_ads', async (ctx) => {
     await Garantex.get_ads("sell", false)
         .then((response) => console.log(response))
+})
+
+bot.command('get_chats', async (ctx) => {
+    try {
+        await Garantex.get_chats()
+            .then(async res => {
+                let result = await res.json()
+                if (result.length == 0) {
+                    await ctx.reply('Список чатов пуст!')
+                }
+            }).catch(err => {
+                console.log(err)
+            })
+    } catch (err) {
+        console.log(err)
+    }
 })
 
 bot.command('ads', async (ctx) => {
@@ -102,6 +119,11 @@ bot.command('ads', async (ctx) => {
     message += `min_rating: ${res.min_rating}\n`
     message += `verified_only: ${res.verified_only}`
     await ctx.reply(message)
+})
+
+bot.command('token', async (ctx) => {
+    let token = await getToken()
+    console.log(token)
 })
 
 export default bot
