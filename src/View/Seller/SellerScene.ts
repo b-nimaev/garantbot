@@ -26,4 +26,7 @@ handler.action("my_responses", async (ctx) => {
 seller.leave(async (ctx) => console.log("seller scene leave"))
 seller.enter(async (ctx) => await SellerService.greeting(ctx))
 seller.start(async (ctx) => ctx.scene.enter("home"))
+seller.command('role', async (ctx) => {
+    ctx.scene.enter("home")
+})
 export default seller

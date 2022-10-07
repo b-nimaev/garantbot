@@ -126,15 +126,6 @@ bot.command('token', async (ctx) => {
     console.log(token)
 })
 
-bot.command('role', async (ctx: MyContext) => {
-    console.log(ctx)
-    // return await UserService.SetRole(ctx, 'unset').then(async () => {
-    //     await ctx.scene.enter('home')
-    // }).catch(err => {
-    //     console.log(err)
-    // })
-})
-
 export default bot
 const app = express()
 const port = process.env.port

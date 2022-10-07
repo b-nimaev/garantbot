@@ -202,6 +202,10 @@ const customer = new Scenes.WizardScene(
     async (ctx) => await AService.single_ads(ctx)
 )
 
+customer.command('role', async (ctx) => {
+    ctx.scene.enter("home")
+})
+
 handler.action('create', async (ctx) => await CustomerService.main(ctx))
 
 customer.enter(async (ctx) => await greeting(ctx))
